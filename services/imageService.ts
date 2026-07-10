@@ -1,0 +1,68 @@
+import { Directory, File, Paths } from 'expo-file-system';
+
+import { IMAGES_DIR_NAME } from '@/constants/theme';
+import { generateImageFileName } from '@/utils/sampleId';
+
+function getImagesRootDirectory(): Directory {
+  return new Directory(Paths.document, IMAGES_DIR_NAME);
+}
+
+function ensureImagesRoot(): Directory {
+  const root = getImagesRootDirectory();
+  if (!root.exists) {
+    root.create();
+  }
+  return root;
+}
+
+export interface SaveImageParams {
+  tempUri: string;
+  cloneNumber: string;
+  treeNumber: string;
+  leafNumber: string;
+  imageIndex: number;
+}
+
+/** Copy a captured image into persistent app storage with standardized naming. */
+export function saveSampleImage(params: SaveImageParams): string {
+  const root = ensureImagesRoot();
+  const fileName = generateImageFileName(
+    {
+      cloneNumber: params.cloneNumber,
+      treeNumber: params.treeNumber,
+      leafNumber: params.leafNumber,
+    },
+    params.imageIndex,
+  );
+
+  const destination = new File(root, fileName);
+  const source = new File(params.tempUri);
+
+  if (!source.exists) {
+    throw new Error('Captured image file not found.');
+  }
+
+  if (destination.exists) {
+    destination.delete();
+  }
+
+  source.copy(destination);
+  return destination.uri;
+}
+
+/** Delete image file from disk if it exists. */
+export function deleteSampleImage(filePath: string): void {
+  try {
+    const file = new File(filePath);
+    if (file.exists) {
+      file.delete();
+    }
+  } catch (error) {
+    console.warn('Failed to delete image:', filePath, error);
+  }
+}
+
+/** Delete all image files associated with a sample. */
+export function deleteSampleImages(imagePaths: string[]): void {
+  imagePaths.forEach(deleteSampleImage);
+}

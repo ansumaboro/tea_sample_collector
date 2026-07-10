@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "dataCollectionAndroidApp",
-    "slug": "dataCollectionAndroidApp",
+    "name": "Tea Sample Collector",
+    "slug": "teaSampleCollector",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "datacollectionandroidapp",
+    "scheme": "datasamplecollector",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
@@ -26,13 +26,28 @@
     "plugins": [
       "expo-router",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Tea Sample Collector to access your camera for leaf photos."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Tea Sample Collector to record GPS coordinates with each sample."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-sharing",
+      "expo-secure-store",
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

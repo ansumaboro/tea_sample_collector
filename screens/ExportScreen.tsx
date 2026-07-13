@@ -1,16 +1,17 @@
+import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
 
 import { ActionButton } from '@/components/ActionButton';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { sampleRepository } from '@/database/sampleRepository';
-import { exportRecordsToFile } from '@/services/exportService';
+import { clearRecords, exportRecordsToFile } from '@/services/exportService';
 
 export function ExportScreen() {
   const [recordCount, setRecordCount] = useState(0);
   const [exporting, setExporting] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     sampleRepository.count().then(setRecordCount).catch(() => setRecordCount(0));
@@ -39,6 +40,42 @@ export function ExportScreen() {
     }
   }, [recordCount]);
 
+  const handleClear = useCallback(() => {
+    Alert.alert(
+      'Clear Records',
+      'This will permanently delete all samples and stored images. This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setClearing(true);
+
+            try {
+              await clearRecords();
+              
+              setRecordCount(0);
+
+              Alert.alert(
+                'Records Cleared',
+                'All sample records have been deleted.'
+              );
+            } catch (error) {
+              const message = error instanceof Error? error.message : 'Failed to clear records.';
+              Alert.alert('Error', message);
+            } finally {
+              setClearing(false);
+            }
+          },
+        },
+      ]
+    );
+  }, []);
+
   return (
     <View style={styles.container}>
       <ScreenHeader title="Export Records" subtitle="Generate CSV from local database" />
@@ -56,6 +93,12 @@ export function ExportScreen() {
         label={exporting ? 'Exporting...' : 'Export Records'}
         onPress={handleExport}
         disabled={exporting}
+      />
+      <ActionButton
+        label={clearing ? 'Clearing...' : 'Clear Records'}
+        onPress={handleClear}
+        disabled={exporting || clearing}
+        variant="danger"
       />
       <ActionButton label="Back" onPress={() => router.back()} variant="secondary" />
     </View>

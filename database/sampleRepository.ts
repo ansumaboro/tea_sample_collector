@@ -206,4 +206,17 @@ export const sampleRepository = {
     );
     return result?.count ?? 0;
   },
+
+  async clear() {
+    const db = await getDatabase();
+
+    await db.execAsync(`
+      DELETE FROM samples;
+      DELETE FROM sample_images;
+      DELETE FROM sqlite_sequence
+      WHERE name='samples';
+      DELETE FROM sqlite_sequence
+      WHERE name='sample_images';
+    `);
+  }
 };

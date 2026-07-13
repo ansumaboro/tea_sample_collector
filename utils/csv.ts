@@ -32,6 +32,10 @@ function escapeCsvValue(value: string | number | boolean | null | undefined): st
 }
 
 function sampleToRow(sample: Sample): string[] {
+  for (const image in sample.images){
+    const imageName = sample.images[image].split('/').pop() || "none.jpg"
+    sample.images[image] = imageName;
+  }
   return [
     sample.id,
     sample.cloneNumber,

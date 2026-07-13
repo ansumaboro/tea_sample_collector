@@ -8,6 +8,7 @@ function rowToSample(row: SampleRow, images: string[]): Sample {
     cloneNumber: row.clone_number,
     treeNumber: row.tree_number,
     leafNumber: row.leaf_number,
+    leafPosition: row.leaf_position,
     meterTaken: row.meter_taken === 1,
     wetLabRequired: row.wet_lab_required === 1,
     wetLabCompleted: row.wet_lab_completed === 1,
@@ -57,16 +58,17 @@ export const sampleRepository = {
 
     await db.runAsync(
       `INSERT INTO samples (
-        id, clone_number, tree_number, leaf_number,
+        id, clone_number, tree_number, leaf_number, leaf_position,
         meter_taken, wet_lab_required, wet_lab_completed,
         gps_latitude, gps_longitude,
         device_manufacturer, device_model, installation_id, app_version,
         notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       params.id,
       params.cloneNumber.trim(),
       params.treeNumber.trim(),
       params.leafNumber.trim(),
+      params.leafPosition.trim(),
       params.meterTaken ? 1 : 0,
       params.wetLabRequired ? 1 : 0,
       params.wetLabCompleted ? 1 : 0,
@@ -126,8 +128,10 @@ export const sampleRepository = {
           OR clone_number LIKE ?
           OR tree_number LIKE ?
           OR leaf_number LIKE ?
+          OR leaf_position LIKE ?
           OR notes LIKE ?
        ORDER BY datetime(created_at) DESC`,
+      like,
       like,
       like,
       like,
@@ -157,6 +161,7 @@ export const sampleRepository = {
         clone_number = ?,
         tree_number = ?,
         leaf_number = ?,
+        leaf_position = ?,
         meter_taken = ?,
         wet_lab_required = ?,
         wet_lab_completed = ?,
@@ -166,6 +171,7 @@ export const sampleRepository = {
       merged.cloneNumber.trim(),
       merged.treeNumber.trim(),
       merged.leafNumber.trim(),
+      merged.leafPosition.trim(),
       merged.meterTaken ? 1 : 0,
       merged.wetLabRequired ? 1 : 0,
       merged.wetLabCompleted ? 1 : 0,

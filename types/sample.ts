@@ -4,6 +4,7 @@ export interface Sample {
   cloneNumber: string;
   treeNumber: string;
   leafNumber: string;
+  leafPosition: string;
   meterTaken: boolean;
   wetLabRequired: boolean;
   wetLabCompleted: boolean;
@@ -24,6 +25,7 @@ export interface SampleFormInput {
   cloneNumber: string;
   treeNumber: string;
   leafNumber: string;
+  leafPosition: string;
   meterTaken: boolean;
   wetLabRequired: boolean;
   wetLabCompleted: boolean;
@@ -37,6 +39,7 @@ export type SampleUpdateInput = Partial<
     | 'cloneNumber'
     | 'treeNumber'
     | 'leafNumber'
+    | 'leafPosition'
     | 'meterTaken'
     | 'wetLabRequired'
     | 'wetLabCompleted'
@@ -61,6 +64,7 @@ export interface SampleRow {
   clone_number: string;
   tree_number: string;
   leaf_number: string;
+  leaf_position: string;
   meter_taken: number;
   wet_lab_required: number;
   wet_lab_completed: number;

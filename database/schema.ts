@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS samples (
   clone_number TEXT NOT NULL,
   tree_number TEXT NOT NULL,
   leaf_number TEXT NOT NULL,
+  leaf_position TEXT NOT NULL,
   meter_taken INTEGER NOT NULL DEFAULT 0,
   wet_lab_required INTEGER NOT NULL DEFAULT 0,
   wet_lab_completed INTEGER NOT NULL DEFAULT 0,

@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Controller, useForm } from 'react-hook-form';
 import { router } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ActionButton } from '@/components/ActionButton';
 import { AutoInfoPanel } from '@/components/AutoInfoPanel';
 import { CameraModal } from '@/components/CameraModal';
 import { CheckboxRow } from '@/components/CheckboxRow';
+import { DropdownField } from '@/components/DropdownField';
 import { FormField } from '@/components/FormField';
 import { ImageThumbnailList } from '@/components/ImageThumbnailList';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -25,6 +26,15 @@ export function AddSampleScreen() {
   const { coordinates, captureLocation, loading: gpsLoading } = useLocationCapture();
   const [now] = useState(() => new Date());
 
+  const leafOptions = [
+    { label: '1st Leaf', value: '1st_leaf' },
+    { label: '2nd Leaf', value: '2nd_leaf' },
+    { label: '3rd Leaf', value: '3rd_leaf' },
+    { label: '4th Leaf', value: '4th_leaf' },
+    { label: '5th Leaf', value: '5th_leaf' },
+    { label: 'Maintenance Leaf', value: 'maintenance_leaf' },
+  ];
+
   const {
     control,
     handleSubmit,
@@ -35,6 +45,7 @@ export function AddSampleScreen() {
       cloneNumber: '',
       treeNumber: '',
       leafNumber: '',
+      leafPosition: '',
       meterTaken: false,
       wetLabRequired: false,
       wetLabCompleted: false,
@@ -148,6 +159,21 @@ export function AddSampleScreen() {
             onBlur={onBlur}
             onChangeText={onChange}
             error={errors.leafNumber?.message}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="leafPosition"
+        rules={{ required: 'Leaf position is required' }}
+        render={({ field: { onChange, value } }) => (
+          <DropdownField
+            label="Leaf Number"
+            placeholder="Select leaf position"
+            value={value}
+            onValueChange={onChange}
+            options={leafOptions}
+            error={errors.leafPosition?.message}
           />
         )}
       />

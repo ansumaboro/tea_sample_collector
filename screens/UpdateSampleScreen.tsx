@@ -1,4 +1,6 @@
+import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import {
   Alert,
   FlatList,
@@ -7,12 +9,11 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Controller, useForm } from 'react-hook-form';
-import { router } from 'expo-router';
 
 import { ActionButton } from '@/components/ActionButton';
 import { CameraModal } from '@/components/CameraModal';
 import { CheckboxRow } from '@/components/CheckboxRow';
+import { DropdownField } from '@/components/DropdownField';
 import { FormField } from '@/components/FormField';
 import { ImageThumbnailList } from '@/components/ImageThumbnailList';
 import { SampleListItem } from '@/components/SampleListItem';
@@ -28,6 +29,16 @@ import type { SampleFormInput } from '@/types/sample';
 type EditFormValues = SampleFormInput;
 
 export function UpdateSampleScreen() {
+
+  const leafOptions = [
+    { label: '1st Leaf', value: '1st_leaf' },
+    { label: '2nd Leaf', value: '2nd_leaf' },
+    { label: '3rd Leaf', value: '3rd_leaf' },
+    { label: '4th Leaf', value: '4th_leaf' },
+    { label: '5th Leaf', value: '5th_leaf' },
+    { label: 'Maintenance Leaf', value: 'maintenance_leaf' },
+  ];
+
   const {
     samples,
     loading,
@@ -55,6 +66,7 @@ export function UpdateSampleScreen() {
       cloneNumber: '',
       treeNumber: '',
       leafNumber: '',
+      leafPosition: '',
       meterTaken: false,
       wetLabRequired: false,
       wetLabCompleted: false,
@@ -89,6 +101,7 @@ export function UpdateSampleScreen() {
       cloneNumber: selectedSample.cloneNumber,
       treeNumber: selectedSample.treeNumber,
       leafNumber: selectedSample.leafNumber,
+      leafPosition: selectedSample.leafPosition,
       meterTaken: selectedSample.meterTaken,
       wetLabRequired: selectedSample.wetLabRequired,
       wetLabCompleted: selectedSample.wetLabCompleted,
@@ -211,6 +224,18 @@ export function UpdateSampleScreen() {
                 value={value}
                 onBlur={onBlur}
                 onChangeText={onChange}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="leafPosition"
+            render={({ field: { onChange, value } }) => (
+              <DropdownField
+                label="Leaf Position"
+                value={value}
+                onValueChange={onChange}
+                options={leafOptions}
               />
             )}
           />

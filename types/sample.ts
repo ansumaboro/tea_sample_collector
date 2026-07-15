@@ -85,3 +85,12 @@ export interface SampleImageRow {
   file_path: string;
   sort_order: number;
 }
+
+export type SampleSearchField =
+  | 'all'
+  | 'id'
+  | 'clone_number'
+  | 'tree_number'
+  | 'leaf_number'
+  | 'leaf_position'
+  | 'notes';

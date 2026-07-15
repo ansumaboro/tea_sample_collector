@@ -1,12 +1,11 @@
-import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-import { leafOptions } from '@/constants/leafOptions';
+import { leafOptions } from '@/constants/leafOptions'
 import { ActionButton } from '@/components/ActionButton';
-import { AutoInfoPanel } from '@/components/AutoInfoPanel';
 import { CameraModal } from '@/components/CameraModal';
 import { CheckboxRow } from '@/components/CheckboxRow';
 import { DropdownField } from '@/components/DropdownField';
@@ -15,23 +14,21 @@ import { ImageThumbnailList } from '@/components/ImageThumbnailList';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { useImageCapture } from '@/hooks/useImageCapture';
-import { useLocationCapture } from '@/hooks/useLocation';
-import { useSaveSample } from '@/hooks/useSaveSample';
-import { useDeviceStore } from '@/store/deviceStore';
 import type { SampleFormInput } from '@/types/sample';
-import { toIsoTimestamp } from '@/utils/dateFormat';
-import { buildSamplePrefix, generateSampleId, sanitizeDeviceModel } from '@/utils/sampleId';
+import { sampleRepository } from '@/database/sampleRepository';
+import { ActivityIndicator } from "react-native";
 
-export function AddSampleScreen() {
-  const deviceInfo = useDeviceStore((state) => state.deviceInfo);
-  const { saveSample, saving, error } = useSaveSample();
-  const { coordinates, captureLocation, loading: gpsLoading } = useLocationCapture();
-  const [now] = useState(() => new Date());
+export function EditSampleScreen() {
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const { id } = useLocalSearchParams<{ id: string }>();
 
   const {
     control,
     handleSubmit,
     watch,
+    reset,
     formState: { errors },
   } = useForm<SampleFormInput>({
     defaultValues: {
@@ -57,50 +54,113 @@ export function AddSampleScreen() {
     openCamera,
     handleCapture,
     removeImage,
-    resetImages,
-  } = useImageCapture({ cloneNumber, treeNumber, leafNumber });
-
-  useEffect(() => {
-    captureLocation();
-  }, [captureLocation]);
-
-  const sampleIdPreview = useMemo(() => {
-    const prefix = buildSamplePrefix({ cloneNumber, treeNumber, leafNumber });
-    if (!prefix || !deviceInfo) return '';
-    return generateSampleId({
-      cloneNumber,
-      treeNumber,
-      leafNumber,
-      deviceModel: sanitizeDeviceModel(deviceInfo.model),
-      timestamp: now,
-    });
-  }, [cloneNumber, deviceInfo, leafNumber, now, treeNumber]);
+    setExistingImages,
+  } = useImageCapture({
+    cloneNumber,
+    treeNumber,
+    leafNumber,
+  });
 
   const onSubmit = handleSubmit(async (values) => {
-    const sample = await saveSample({
-      ...values,
-      images: images.map((image) => image.filePath ?? image.uri),
-    });
+    if (!id) {
+      Alert.alert('Error', 'Invalid sample ID.');
+      return;
+    }
 
-    if (sample) {
-      Alert.alert('Sample saved', `ID: ${sample.id}`, [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
-      resetImages();
+    try {
+      setSaving(true);
+
+      await sampleRepository.update(id, {
+        ...values,
+        images: images.map((image) => image.filePath ?? image.uri),
+      });
+
+      Alert.alert(
+        'Success',
+        'Sample updated successfully.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.back(),
+          },
+        ],
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to update sample.';
+
+      Alert.alert('Update Failed', message);
+    } finally {
+      setSaving(false);
     }
   });
 
   useEffect(() => {
-    if (error) {
-      Alert.alert('Save failed', error);
+    async function loadSample() {
+      if (!id) return;
+
+      try {
+        const sample = await sampleRepository.getById(id);
+
+        if (!sample) {
+          Alert.alert('Error', 'Sample not found.');
+          router.back();
+          return;
+        }
+
+        reset({
+          cloneNumber: sample.cloneNumber,
+          treeNumber: sample.treeNumber,
+          leafNumber: sample.leafNumber,
+          leafPosition: sample.leafPosition,
+          meterTaken: sample.meterTaken,
+          wetLabRequired: sample.wetLabRequired,
+          wetLabCompleted: sample.wetLabCompleted,
+          notes: sample.notes,
+        });
+
+        setExistingImages(sample.images);
+      } catch (err) {
+        Alert.alert('Error', 'Failed to load sample.');
+        router.back();
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [error]);
+
+    loadSample();
+  }, [id, reset, setExistingImages]);
+
+  if (loading) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <ActivityIndicator
+            size="large"
+            color={COLORS.primary}
+          />
+
+          <Text style={{ marginTop: SPACING.md }}>
+            Loading sample...
+          </Text>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
 
   return (
     <SafeAreaProvider>
       <SafeAreaView>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <ScreenHeader title="Add Sample" subtitle="Capture images and enter sample details" />
+          <ScreenHeader title="Edit Sample" subtitle="Update an existing sample" />
 
           <Text style={styles.sectionTitle}>Image Section</Text>
           <ActionButton label="Capture Images" onPress={openCamera} />
@@ -163,7 +223,7 @@ export function AddSampleScreen() {
             rules={{ required: 'Leaf position is required' }}
             render={({ field: { onChange, value } }) => (
               <DropdownField
-                label="Leaf Number"
+                label="Leaf Position"
                 placeholder="Select leaf position"
                 value={value}
                 onValueChange={onChange}
@@ -189,6 +249,17 @@ export function AddSampleScreen() {
           />
           <Controller
             control={control}
+            name="wetLabCompleted"
+            render={({ field: { value, onChange } }) => (
+              <CheckboxRow
+                label="Wet Lab Completed?"
+                value={value}
+                onValueChange={onChange}
+              />
+            )}
+          />
+          <Controller
+            control={control}
             name="notes"
             render={({ field: { onChange, onBlur, value } }) => (
               <FormField
@@ -204,23 +275,8 @@ export function AddSampleScreen() {
             )}
           />
 
-          {deviceInfo ? (
-            <AutoInfoPanel
-              sampleIdPreview={sampleIdPreview}
-              timestamp={toIsoTimestamp(now)}
-              latitude={coordinates?.latitude ?? null}
-              longitude={coordinates?.longitude ?? null}
-              deviceManufacturer={deviceInfo.manufacturer}
-              deviceModel={deviceInfo.model}
-              installationId={deviceInfo.installationId}
-              appVersion={deviceInfo.appVersion}
-            />
-          ) : null}
-
-          {gpsLoading ? <Text style={styles.helper}>Reading GPS...</Text> : null}
-
           <View style={styles.actions}>
-            <ActionButton label={saving ? 'Saving...' : 'Save Sample'} onPress={onSubmit} disabled={saving} />
+            <ActionButton label={saving ? 'Saving...' : 'Save Changes'} onPress={onSubmit} disabled={saving} />
             <ActionButton label="Back" onPress={() => router.back()} variant="secondary" />
           </View>
 
@@ -256,10 +312,5 @@ const styles = StyleSheet.create({
   actions: {
     gap: SPACING.sm,
     marginBottom: SPACING.xl,
-  },
-  helper: {
-    fontSize: FONT_SIZES.body,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.sm,
   },
 });

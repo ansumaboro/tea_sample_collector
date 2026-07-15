@@ -1,5 +1,12 @@
 import { getDatabase } from '@/database/connection';
-import type { Sample, SampleFormInput, SampleImageRow, SampleRow, SampleUpdateInput } from '@/types/sample';
+import type {
+  Sample,
+  SampleFormInput,
+  SampleImageRow,
+  SampleRow,
+  SampleSearchField,
+  SampleUpdateInput,
+} from '@/types/sample';
 import { toIsoTimestamp } from '@/utils/dateFormat';
 
 function rowToSample(row: SampleRow, images: string[]): Sample {
@@ -114,16 +121,24 @@ export const sampleRepository = {
     return hydrateSample(row);
   },
 
-  async search(query: string): Promise<Sample[]> {
+  async search(
+    query: string,
+    field: SampleSearchField = 'all',
+  ): Promise<Sample[]> {
     const trimmed = query.trim();
+
     if (!trimmed) {
       return this.getAll();
     }
 
     const db = await getDatabase();
     const like = `%${trimmed}%`;
-    const rows = await db.getAllAsync<SampleRow>(
-      `SELECT * FROM samples
+
+    let rows: SampleRow[];
+
+    if (field === 'all') {
+      rows = await db.getAllAsync<SampleRow>(
+        `SELECT * FROM samples
        WHERE id LIKE ?
           OR clone_number LIKE ?
           OR tree_number LIKE ?
@@ -131,13 +146,22 @@ export const sampleRepository = {
           OR leaf_position LIKE ?
           OR notes LIKE ?
        ORDER BY datetime(created_at) DESC`,
-      like,
-      like,
-      like,
-      like,
-      like,
-      like,
-    );
+        like,
+        like,
+        like,
+        like,
+        like,
+        like,
+      );
+    } else {
+      rows = await db.getAllAsync<SampleRow>(
+        `SELECT * FROM samples
+       WHERE ${field} LIKE ?
+       ORDER BY datetime(created_at) DESC`,
+        like,
+      );
+    }
+
     return Promise.all(rows.map((row) => hydrateSample(row)));
   },
 

@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActionButton } from '@/components/ActionButton';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -57,7 +58,7 @@ export function ExportScreen() {
 
             try {
               await clearRecords();
-              
+
               setRecordCount(0);
 
               Alert.alert(
@@ -65,7 +66,7 @@ export function ExportScreen() {
                 'All sample records have been deleted.'
               );
             } catch (error) {
-              const message = error instanceof Error? error.message : 'Failed to clear records.';
+              const message = error instanceof Error ? error.message : 'Failed to clear records.';
               Alert.alert('Error', message);
             } finally {
               setClearing(false);
@@ -77,38 +78,44 @@ export function ExportScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <ScreenHeader title="Export Records" subtitle="Generate CSV from local database" />
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.page}>
+        <View style={styles.container}>
+          <ScreenHeader title="Export Records" subtitle="Generate CSV from local database" />
 
-      <View style={styles.card}>
-        <Text style={styles.statLabel}>Total samples</Text>
-        <Text style={styles.statValue}>{recordCount}</Text>
-        <Text style={styles.help}>
-          On Android, you will be asked to choose a folder using the system file picker (Storage
-          Access Framework). The CSV file will be saved there.
-        </Text>
-      </View>
+          <View style={styles.card}>
+            <Text style={styles.statLabel}>Total samples</Text>
+            <Text style={styles.statValue}>{recordCount}</Text>
+            <Text style={styles.help}>
+              On Android, you will be asked to choose a folder using the system file picker (Storage
+              Access Framework). The CSV file will be saved there.
+            </Text>
+          </View>
 
-      <ActionButton
-        label={exporting ? 'Exporting...' : 'Export Records'}
-        onPress={handleExport}
-        disabled={exporting}
-      />
-      <ActionButton
-        label={clearing ? 'Clearing...' : 'Clear Records'}
-        onPress={handleClear}
-        disabled={exporting || clearing}
-        variant="danger"
-      />
-      <ActionButton label="Back" onPress={() => router.back()} variant="secondary" />
-    </View>
+          <ActionButton
+            label={exporting ? 'Exporting...' : 'Export Records'}
+            onPress={handleExport}
+            disabled={exporting}
+          />
+          <ActionButton
+            label={clearing ? 'Clearing...' : 'Clear Records'}
+            onPress={handleClear}
+            disabled={exporting || clearing}
+            variant="danger"
+          />
+          <ActionButton label="Back" onPress={() => router.back()} variant="secondary" />
+        </View>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  page: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  container: {
     padding: SPACING.lg,
     gap: SPACING.md,
   },

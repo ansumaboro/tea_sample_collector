@@ -1,5 +1,4 @@
 import Constants from 'expo-constants';
-import * as Crypto from 'expo-crypto';
 import * as Device from 'expo-device';
 import * as SecureStore from 'expo-secure-store';
 
@@ -16,7 +15,7 @@ async function getOrCreateInstallationId(): Promise<string> {
     // SecureStore may fail on some platforms; fall through to generate new ID.
   }
 
-  const newId = Crypto.randomUUID();
+  const newId = String(Math.floor(Math.random() * (99999 - 10000 + 1)) + 10000);
   try {
     await SecureStore.setItemAsync(INSTALLATION_ID_KEY, newId);
   } catch {

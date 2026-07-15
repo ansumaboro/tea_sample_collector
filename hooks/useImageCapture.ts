@@ -1,6 +1,6 @@
+import { useCameraPermissions } from 'expo-camera';
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
-import { useCameraPermissions } from 'expo-camera';
 
 import { saveSampleImage } from '@/services/imageService';
 
@@ -13,6 +13,7 @@ interface UseImageCaptureOptions {
   cloneNumber: string;
   treeNumber: string;
   leafNumber: string;
+  installationId?: string;
 }
 
 export function useImageCapture(options: UseImageCaptureOptions) {
@@ -45,11 +46,11 @@ export function useImageCapture(options: UseImageCaptureOptions) {
   const handleCapture = useCallback(
     (tempUri: string) => {
       const nextIndex = images.length + 1;
+      if (!options.installationId) return '';
+      
       const filePath = saveSampleImage({
         tempUri,
-        cloneNumber: options.cloneNumber,
-        treeNumber: options.treeNumber,
-        leafNumber: options.leafNumber,
+        installationId: options.installationId,
         imageIndex: nextIndex,
       });
 

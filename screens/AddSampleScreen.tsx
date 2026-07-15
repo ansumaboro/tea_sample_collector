@@ -4,7 +4,6 @@ import { Controller, useForm } from 'react-hook-form';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-import { leafOptions } from '@/constants/leafOptions';
 import { ActionButton } from '@/components/ActionButton';
 import { AutoInfoPanel } from '@/components/AutoInfoPanel';
 import { CameraModal } from '@/components/CameraModal';
@@ -13,6 +12,7 @@ import { DropdownField } from '@/components/DropdownField';
 import { FormField } from '@/components/FormField';
 import { ImageThumbnailList } from '@/components/ImageThumbnailList';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { leafOptions } from '@/constants/leafOptions';
 import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { useImageCapture } from '@/hooks/useImageCapture';
 import { useLocationCapture } from '@/hooks/useLocation';
@@ -20,7 +20,7 @@ import { useSaveSample } from '@/hooks/useSaveSample';
 import { useDeviceStore } from '@/store/deviceStore';
 import type { SampleFormInput } from '@/types/sample';
 import { toIsoTimestamp } from '@/utils/dateFormat';
-import { buildSamplePrefix, generateSampleId, sanitizeDeviceModel } from '@/utils/sampleId';
+import { generateSampleId, sanitizeDeviceModel } from '@/utils/sampleId';
 
 export function AddSampleScreen() {
   const deviceInfo = useDeviceStore((state) => state.deviceInfo);
@@ -58,19 +58,17 @@ export function AddSampleScreen() {
     handleCapture,
     removeImage,
     resetImages,
-  } = useImageCapture({ cloneNumber, treeNumber, leafNumber });
+  } = useImageCapture({ cloneNumber, treeNumber, leafNumber, installationId: deviceInfo?.installationId });
 
   useEffect(() => {
     captureLocation();
   }, [captureLocation]);
 
   const sampleIdPreview = useMemo(() => {
-    const prefix = buildSamplePrefix({ cloneNumber, treeNumber, leafNumber });
-    if (!prefix || !deviceInfo) return '';
+    if (!deviceInfo) return '';
+    // const prefix = deviceInfo.installationId;
     return generateSampleId({
-      cloneNumber,
-      treeNumber,
-      leafNumber,
+      installationId: deviceInfo.installationId,
       deviceModel: sanitizeDeviceModel(deviceInfo.model),
       timestamp: now,
     });

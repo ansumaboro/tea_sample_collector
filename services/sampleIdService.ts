@@ -1,19 +1,15 @@
-import { generateSampleId, sanitizeDeviceModel } from '@/utils/sampleId';
 import { getDeviceInfo } from '@/services/deviceService';
+import { generateSampleId, sanitizeDeviceModel } from '@/utils/sampleId';
 
 export interface BuildSampleIdParams {
-  cloneNumber: string;
-  treeNumber: string;
-  leafNumber: string;
+  installationId: string;
 }
 
 /** Build a unique sample ID using current device model and timestamp. */
-export async function buildSampleId(params: BuildSampleIdParams): Promise<string> {
+export async function buildSampleId(): Promise<string> {
   const device = await getDeviceInfo();
   return generateSampleId({
-    cloneNumber: params.cloneNumber,
-    treeNumber: params.treeNumber,
-    leafNumber: params.leafNumber,
+    installationId: device.installationId,
     deviceModel: sanitizeDeviceModel(device.model),
   });
 }

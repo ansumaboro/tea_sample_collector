@@ -7,9 +7,7 @@
 import { formatSampleTimestamp } from './dateFormat';
 
 export interface SampleIdParts {
-  cloneNumber: string;
-  treeNumber: string;
-  leafNumber: string;
+  installationId: string;
   deviceModel: string;
   timestamp?: Date;
 }
@@ -45,27 +43,30 @@ export function sanitizeDeviceModel(model: string): string {
 }
 
 /** Build the shared prefix used in IDs and image names. */
-export function buildSamplePrefix(parts: Omit<SampleIdParts, 'deviceModel' | 'timestamp'>): string {
-  const clone = normalizeCloneNumber(parts.cloneNumber);
-  const tree = formatTreeSegment(parts.treeNumber);
-  const leaf = formatLeafSegment(parts.leafNumber);
-  if (!clone || !tree || !leaf) return '';
-  return `${clone}-${tree}-${leaf}`;
-}
+// export function buildSamplePrefix(parts: Omit<SampleIdParts, 'deviceModel' | 'timestamp'>): string {
+//   const clone = normalizeCloneNumber(parts.cloneNumber);
+//   const tree = formatTreeSegment(parts.treeNumber);
+//   const leaf = formatLeafSegment(parts.leafNumber);
+//   if (!clone || !tree || !leaf) return '';
+//   return `${clone}-${tree}-${leaf}`;
+// }
 
 /** Generate full unique sample ID. */
 export function generateSampleId(parts: SampleIdParts): string {
-  const prefix = buildSamplePrefix(parts);
+  // const prefix = buildSamplePrefix(parts);
+  const installationId = parts.installationId;
   const device = sanitizeDeviceModel(parts.deviceModel);
   const timestamp = formatSampleTimestamp(parts.timestamp ?? new Date());
-  return `${prefix}-${device}-${timestamp}`;
+  return `${installationId}-${device}-${timestamp}`;
 }
 
 /** Generate image filename for a given index (1-based). */
 export function generateImageFileName(
-  parts: Omit<SampleIdParts, 'deviceModel' | 'timestamp'>,
+  parts: Omit<SampleIdParts, 'deviceModel'>,
   index: number,
 ): string {
-  const prefix = buildSamplePrefix(parts);
-  return `${prefix}-img${index}.jpg`;
+  // const prefix = buildSamplePrefix(parts);
+  const installationId = parts.installationId;
+  const timestamp = formatSampleTimestamp(parts.timestamp ?? new Date())
+  return `${installationId}-${timestamp}-img${index}.jpg`;
 }

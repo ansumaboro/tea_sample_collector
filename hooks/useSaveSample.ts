@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 
 import { sampleRepository } from '@/database/sampleRepository';
-import { buildSampleId } from '@/services/sampleIdService';
 import { getDeviceInfo } from '@/services/deviceService';
 import { resolveCoordinates } from '@/services/locationService';
+import { buildSampleId } from '@/services/sampleIdService';
 import type { Sample, SampleFormInput } from '@/types/sample';
 
 interface SaveSampleParams extends SampleFormInput {
@@ -23,15 +23,16 @@ export function useSaveSample() {
         throw new Error('Capture at least one image before saving.');
       }
 
-      const [device, coordinates, sampleId] = await Promise.all([
+      const [device, coordinates] = await Promise.all([
         getDeviceInfo(),
         resolveCoordinates(),
-        buildSampleId({
-          cloneNumber: input.cloneNumber,
-          treeNumber: input.treeNumber,
-          leafNumber: input.leafNumber,
-        }),
+        // buildSampleId({
+        //   cloneNumber: input.cloneNumber,
+        //   treeNumber: input.treeNumber,
+        //   leafNumber: input.leafNumber,
+        // }),
       ]);
+      const sampleId = await buildSampleId()
 
       const sample = await sampleRepository.create({
         ...input,

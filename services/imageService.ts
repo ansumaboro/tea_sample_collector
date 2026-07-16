@@ -43,6 +43,7 @@ export function saveSampleImage(params: SaveImageParams): string {
   }
 
   source.copy(destination);
+  // console.log('Image saved:', destination.uri);
   return destination.uri;
 }
 

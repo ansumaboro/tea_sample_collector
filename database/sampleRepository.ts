@@ -1,7 +1,6 @@
 import { getDatabase } from '@/database/connection';
 import type {
   Sample,
-  SampleFormInput,
   SampleImageRow,
   SampleRow,
   SampleSearchField,
@@ -12,21 +11,56 @@ import { toIsoTimestamp } from '@/utils/dateFormat';
 function rowToSample(row: SampleRow, images: string[]): Sample {
   return {
     id: row.id,
+
+    // Sample Information
     cloneNumber: row.clone_number,
     treeNumber: row.tree_number,
     leafNumber: row.leaf_number,
-    leafPosition: row.leaf_position,
-    meterTaken: row.meter_taken === 1,
+    leafPosition: row.leaf_position as Sample["leafPosition"],
+
+    // Meter Readings
+    meterReading1: row.meter_reading_1,
+    meterReading2: row.meter_reading_2,
+    meterReading3: row.meter_reading_3,
+
+    // Wet Lab
     wetLabRequired: row.wet_lab_required === 1,
     wetLabCompleted: row.wet_lab_completed === 1,
+
+    // Collection Information
+    flush: row.flush,
+    flushAutoDetected: row.flush_auto_detected === 1,
+
+    // GPS
     gpsLatitude: row.gps_latitude,
     gpsLongitude: row.gps_longitude,
+    gpsAccuracy: row.gps_accuracy,
+
+    // Manual Location
+    gardenName: row.garden_name,
+    sectionName: row.section_name,
+
+    // Plant Health
+    wilting: row.wilting === 1,
+    chlorosis: row.chlorosis === 1,
+    scorching: row.scorching === 1,
+    pestDamage: row.pest_damage === 1,
+    disease: row.disease === 1,
+
+    // Device Information
     deviceManufacturer: row.device_manufacturer,
     deviceModel: row.device_model,
+    osName: row.os_name,
+    osVersion: row.os_version,
     installationId: row.installation_id,
     appVersion: row.app_version,
+
+    // Images
     images,
-    notes: row.notes,
+
+    // Remarks
+    remarks: row.remarks,
+
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -46,16 +80,10 @@ async function hydrateSample(row: SampleRow): Promise<Sample> {
   return rowToSample(row, images);
 }
 
-export interface CreateSampleParams extends SampleFormInput {
-  id: string;
-  gpsLatitude: number | null;
-  gpsLongitude: number | null;
-  deviceManufacturer: string;
-  deviceModel: string;
-  installationId: string;
-  appVersion: string;
-  images: string[];
-}
+export type CreateSampleParams = Omit<
+  Sample,
+  'createdAt' | 'updatedAt'
+>;
 
 /** Repository for sample CRUD operations. */
 export const sampleRepository = {
@@ -65,44 +93,124 @@ export const sampleRepository = {
 
     await db.runAsync(
       `INSERT INTO samples (
-        id, clone_number, tree_number, leaf_number, leaf_position,
-        meter_taken, wet_lab_required, wet_lab_completed,
-        gps_latitude, gps_longitude,
-        device_manufacturer, device_model, installation_id, app_version,
-        notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id,
+
+      clone_number,
+      tree_number,
+      leaf_number,
+      leaf_position,
+
+      meter_reading_1,
+      meter_reading_2,
+      meter_reading_3,
+
+      flush,
+      flush_auto_detected,
+
+      gps_latitude,
+      gps_longitude,
+      gps_accuracy,
+
+      garden_name,
+      section_name,
+
+      wilting,
+      chlorosis,
+      scorching,
+      pest_damage,
+      disease,
+
+      wet_lab_required,
+      wet_lab_completed,
+
+      device_manufacturer,
+      device_model,
+      os_name,
+      os_version,
+      installation_id,
+      app_version,
+
+      remarks,
+
+      created_at,
+      updated_at
+    )
+    VALUES (
+      ?, ?, ?, ?, ?,
+      ?, ?, ?,
+      ?, ?,
+      ?, ?, ?,
+      ?, ?,
+      ?, ?, ?, ?, ?,
+      ?, ?,
+      ?, ?, ?, ?, ?, ?,
+      ?,
+      ?, ?
+    )`,
+
       params.id,
+
       params.cloneNumber.trim(),
       params.treeNumber.trim(),
       params.leafNumber.trim(),
-      params.leafPosition.trim(),
-      params.meterTaken ? 1 : 0,
-      params.wetLabRequired ? 1 : 0,
-      params.wetLabCompleted ? 1 : 0,
+      params.leafPosition,
+
+      params.meterReading1,
+      params.meterReading2,
+      params.meterReading3,
+
+      params.flush,
+      params.flushAutoDetected ? 1 : 0,
+
       params.gpsLatitude,
       params.gpsLongitude,
+      params.gpsAccuracy,
+
+      params.gardenName.trim(),
+      params.sectionName.trim(),
+
+      params.wilting ? 1 : 0,
+      params.chlorosis ? 1 : 0,
+      params.scorching ? 1 : 0,
+      params.pestDamage ? 1 : 0,
+      params.disease ? 1 : 0,
+
+      params.wetLabRequired ? 1 : 0,
+      params.wetLabCompleted ? 1 : 0,
+
       params.deviceManufacturer,
       params.deviceModel,
+      params.osName,
+      params.osVersion,
       params.installationId,
       params.appVersion,
-      params.notes?.trim() ?? '',
+
+      params.remarks.trim(),
+
       now,
       now,
     );
 
-    for (let index = 0; index < params.images.length; index += 1) {
+    for (let index = 0; index < params.images.length; index++) {
       await db.runAsync(
-        'INSERT INTO sample_images (sample_id, file_path, sort_order) VALUES (?, ?, ?)',
+        `INSERT INTO sample_images
+      (sample_id, file_path, sort_order)
+      VALUES (?, ?, ?)`,
         params.id,
         params.images[index],
         index + 1,
       );
     }
 
-    const row = await db.getFirstAsync<SampleRow>('SELECT * FROM samples WHERE id = ?', params.id);
+    const row = await db.getFirstAsync<SampleRow>(
+      'SELECT * FROM samples WHERE id = ?',
+      params.id,
+    );
+
     if (!row) {
       throw new Error('Failed to read sample after insert.');
     }
+
     return rowToSample(row, params.images);
   },
 
@@ -144,7 +252,7 @@ export const sampleRepository = {
           OR tree_number LIKE ?
           OR leaf_number LIKE ?
           OR leaf_position LIKE ?
-          OR notes LIKE ?
+          OR remarks LIKE ?
        ORDER BY datetime(created_at) DESC`,
         like,
         like,
@@ -167,48 +275,92 @@ export const sampleRepository = {
 
   async update(id: string, updates: SampleUpdateInput): Promise<Sample> {
     const existing = await this.getById(id);
+
     if (!existing) {
       throw new Error(`Sample not found: ${id}`);
     }
 
     const db = await getDatabase();
     const now = toIsoTimestamp();
+
     const merged: Sample = {
       ...existing,
       ...updates,
-      notes: updates.notes ?? existing.notes,
       updatedAt: now,
     };
 
     await db.runAsync(
       `UPDATE samples SET
-        clone_number = ?,
-        tree_number = ?,
-        leaf_number = ?,
-        leaf_position = ?,
-        meter_taken = ?,
-        wet_lab_required = ?,
-        wet_lab_completed = ?,
-        notes = ?,
-        updated_at = ?
-      WHERE id = ?`,
+      clone_number = ?,
+      tree_number = ?,
+      leaf_number = ?,
+      leaf_position = ?,
+
+      meter_reading_1 = ?,
+      meter_reading_2 = ?,
+      meter_reading_3 = ?,
+
+      flush = ?,
+      flush_auto_detected = ?,
+
+      garden_name = ?,
+      section_name = ?,
+
+      wilting = ?,
+      chlorosis = ?,
+      scorching = ?,
+      pest_damage = ?,
+      disease = ?,
+
+      wet_lab_required = ?,
+      wet_lab_completed = ?,
+
+      remarks = ?,
+
+      updated_at = ?
+    WHERE id = ?`,
+
       merged.cloneNumber.trim(),
       merged.treeNumber.trim(),
       merged.leafNumber.trim(),
-      merged.leafPosition.trim(),
-      merged.meterTaken ? 1 : 0,
+      merged.leafPosition,
+
+      merged.meterReading1,
+      merged.meterReading2,
+      merged.meterReading3,
+
+      merged.flush,
+      merged.flushAutoDetected ? 1 : 0,
+
+      merged.gardenName.trim(),
+      merged.sectionName.trim(),
+
+      merged.wilting ? 1 : 0,
+      merged.chlorosis ? 1 : 0,
+      merged.scorching ? 1 : 0,
+      merged.pestDamage ? 1 : 0,
+      merged.disease ? 1 : 0,
+
       merged.wetLabRequired ? 1 : 0,
       merged.wetLabCompleted ? 1 : 0,
-      merged.notes.trim(),
+
+      merged.remarks.trim(),
+
       now,
       id,
     );
 
     if (updates.images) {
-      await db.runAsync('DELETE FROM sample_images WHERE sample_id = ?', id);
-      for (let index = 0; index < merged.images.length; index += 1) {
+      await db.runAsync(
+        'DELETE FROM sample_images WHERE sample_id = ?',
+        id,
+      );
+
+      for (let index = 0; index < merged.images.length; index++) {
         await db.runAsync(
-          'INSERT INTO sample_images (sample_id, file_path, sort_order) VALUES (?, ?, ?)',
+          `INSERT INTO sample_images
+        (sample_id, file_path, sort_order)
+        VALUES (?, ?, ?)`,
           id,
           merged.images[index],
           index + 1,
@@ -217,9 +369,11 @@ export const sampleRepository = {
     }
 
     const updated = await this.getById(id);
+
     if (!updated) {
       throw new Error('Failed to read sample after update.');
     }
+
     return updated;
   },
 

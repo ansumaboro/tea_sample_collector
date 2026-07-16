@@ -19,9 +19,9 @@ export function useSaveSample() {
     setError(null);
 
     try {
-      if (input.images.length === 0) {
-        throw new Error('Capture at least one image before saving.');
-      }
+      // if (input.images.length === 0) {
+      //   throw new Error('Capture at least one image before saving.');
+      // }
 
       const [device, coordinates] = await Promise.all([
         getDeviceInfo(),
@@ -36,14 +36,25 @@ export function useSaveSample() {
 
       const sample = await sampleRepository.create({
         ...input,
+
+        meterReading1: parseFloat(input.meterReading1),
+        meterReading2: parseFloat(input.meterReading2),
+        meterReading3: parseFloat(input.meterReading3),
+        
         id: sampleId,
+
         gpsLatitude: coordinates?.latitude ?? null,
         gpsLongitude: coordinates?.longitude ?? null,
+        gpsAccuracy: coordinates?.accuracy ?? null,
+
         deviceManufacturer: device.manufacturer,
         deviceModel: device.model,
+        osName: device.osName,
+        osVersion: device.osVersion,
         installationId: device.installationId,
         appVersion: device.appVersion,
-        wetLabCompleted: input.wetLabCompleted ?? false,
+
+        wetLabCompleted: input.wetLabCompleted,
       });
 
       return sample;

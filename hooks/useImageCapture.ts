@@ -21,17 +21,8 @@ export function useImageCapture(options: UseImageCaptureOptions) {
   const [images, setImages] = useState<CapturedImage[]>([]);
   const [showCamera, setShowCamera] = useState(false);
 
-  const canCapture =
-    options.cloneNumber.trim().length > 0 &&
-    options.treeNumber.trim().length > 0 &&
-    options.leafNumber.trim().length > 0;
 
   const openCamera = useCallback(async () => {
-    if (!canCapture) {
-      Alert.alert('Missing fields', 'Enter clone, tree, and leaf numbers before capturing images.');
-      return;
-    }
-
     if (!permission?.granted) {
       const result = await requestPermission();
       if (!result.granted) {
@@ -41,23 +32,28 @@ export function useImageCapture(options: UseImageCaptureOptions) {
     }
 
     setShowCamera(true);
-  }, [canCapture, permission, requestPermission]);
+  }, [permission, requestPermission]);
 
   const handleCapture = useCallback(
     (tempUri: string) => {
       const nextIndex = images.length + 1;
-      if (!options.installationId) return '';
-      
+      if (!options.installationId) {
+        return;
+      }
+
       const filePath = saveSampleImage({
         tempUri,
         installationId: options.installationId,
         imageIndex: nextIndex,
       });
 
+      // console.log('Returned path:', filePath);
+
       setImages((current) => [...current, { uri: filePath, filePath }]);
+      // console.log('Current images:', images);
       setShowCamera(false);
     },
-    [images.length, options.cloneNumber, options.leafNumber, options.treeNumber],
+    [images.length, options.installationId],
   );
 
   const removeImage = useCallback((index: number) => {
@@ -81,6 +77,5 @@ export function useImageCapture(options: UseImageCaptureOptions) {
     removeImage,
     setExistingImages,
     resetImages,
-    canCapture,
   };
 }

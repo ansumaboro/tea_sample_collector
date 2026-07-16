@@ -3,12 +3,15 @@ import * as Location from 'expo-location';
 export interface GpsCoordinates {
   latitude: number;
   longitude: number;
+  accuracy: number | null;
 }
 
+/** Request permission and read current GPS coordinates. */
 /** Request permission and read current GPS coordinates. */
 export async function getCurrentCoordinates(): Promise<GpsCoordinates | null> {
   try {
     const { status } = await Location.requestForegroundPermissionsAsync();
+
     if (status !== 'granted') {
       return null;
     }
@@ -20,6 +23,7 @@ export async function getCurrentCoordinates(): Promise<GpsCoordinates | null> {
     return {
       latitude: position.coords.latitude,
       longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy ?? null,
     };
   } catch (error) {
     console.warn('Failed to get GPS coordinates:', error);
@@ -28,13 +32,19 @@ export async function getCurrentCoordinates(): Promise<GpsCoordinates | null> {
 }
 
 /** Best-effort last known location when fresh fix is unavailable. */
+/** Best-effort last known location when fresh fix is unavailable. */
 export async function getLastKnownCoordinates(): Promise<GpsCoordinates | null> {
   try {
     const position = await Location.getLastKnownPositionAsync();
-    if (!position) return null;
+
+    if (!position) {
+      return null;
+    }
+
     return {
       latitude: position.coords.latitude,
       longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy ?? null,
     };
   } catch {
     return null;

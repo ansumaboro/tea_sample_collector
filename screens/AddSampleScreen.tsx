@@ -1,48 +1,83 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useForm } from 'react-hook-form';
 
 import { ActionButton } from '@/components/ActionButton';
 import { AutoInfoPanel } from '@/components/AutoInfoPanel';
 import { CameraModal } from '@/components/CameraModal';
-import { CheckboxRow } from '@/components/CheckboxRow';
-import { DropdownField } from '@/components/DropdownField';
-import { FormField } from '@/components/FormField';
 import { ImageThumbnailList } from '@/components/ImageThumbnailList';
+import { SampleFields } from '@/components/SampleFields';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { leafOptions } from '@/constants/leafOptions';
-import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { SectionCard } from '@/components/SectionCard';
+
+import {
+  COLORS,
+  FONT_SIZES,
+  LAYOUT,
+  SPACING,
+} from '@/constants/theme';
+
 import { useImageCapture } from '@/hooks/useImageCapture';
 import { useLocationCapture } from '@/hooks/useLocation';
 import { useSaveSample } from '@/hooks/useSaveSample';
+
 import { useDeviceStore } from '@/store/deviceStore';
+
 import type { SampleFormInput } from '@/types/sample';
+
 import { toIsoTimestamp } from '@/utils/dateFormat';
-import { generateSampleId, sanitizeDeviceModel } from '@/utils/sampleId';
+import {
+  generateSampleId,
+  sanitizeDeviceModel,
+} from '@/utils/sampleId';
 
 export function AddSampleScreen() {
   const deviceInfo = useDeviceStore((state) => state.deviceInfo);
+
   const { saveSample, saving, error } = useSaveSample();
-  const { coordinates, captureLocation, loading: gpsLoading } = useLocationCapture();
+
+  const {
+    coordinates,
+    captureLocation,
+    loading: gpsLoading,
+  } = useLocationCapture();
+
   const [now] = useState(() => new Date());
 
   const {
     control,
     handleSubmit,
     watch,
-    formState: { errors },
   } = useForm<SampleFormInput>({
     defaultValues: {
       cloneNumber: '',
       treeNumber: '',
       leafNumber: '',
-      leafPosition: '',
-      meterTaken: false,
+
+      leafPosition: '3rd_leaf',
+
+      meterReading1: '',
+      meterReading2: '',
+      meterReading3: '',
+
       wetLabRequired: false,
       wetLabCompleted: false,
-      notes: '',
+
+      flush: 'first_flush',
+      flushAutoDetected: false,
+
+      gardenName: '',
+      sectionName: '',
+
+      wilting: false,
+      chlorosis: false,
+      scorching: false,
+      pestDamage: false,
+      disease: false,
+
+      remarks: '',
     },
   });
 
@@ -58,7 +93,12 @@ export function AddSampleScreen() {
     handleCapture,
     removeImage,
     resetImages,
-  } = useImageCapture({ cloneNumber, treeNumber, leafNumber, installationId: deviceInfo?.installationId });
+  } = useImageCapture({
+    cloneNumber,
+    treeNumber,
+    leafNumber,
+    installationId: deviceInfo?.installationId,
+  });
 
   useEffect(() => {
     captureLocation();
@@ -66,13 +106,13 @@ export function AddSampleScreen() {
 
   const sampleIdPreview = useMemo(() => {
     if (!deviceInfo) return '';
-    // const prefix = deviceInfo.installationId;
+
     return generateSampleId({
       installationId: deviceInfo.installationId,
       deviceModel: sanitizeDeviceModel(deviceInfo.model),
       timestamp: now,
     });
-  }, [cloneNumber, deviceInfo, leafNumber, now, treeNumber]);
+  }, [deviceInfo, now]);
 
   const onSubmit = handleSubmit(async (values) => {
     const sample = await saveSample({
@@ -80,184 +120,124 @@ export function AddSampleScreen() {
       images: images.map((image) => image.filePath ?? image.uri),
     });
 
-    if (sample) {
-      Alert.alert('Sample saved', `ID: ${sample.id}`, [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
-      resetImages();
-    }
+    if (!sample) return;
+
+    Alert.alert(
+      'Sample Saved',
+      `Sample ID: ${sample.id}`,
+      [
+        {
+          text: 'OK',
+          onPress: () => router.back(),
+        },
+      ],
+    );
+
+    resetImages();
   });
 
   useEffect(() => {
-    if (error) {
-      Alert.alert('Save failed', error);
-    }
+    if (!error) return;
+
+    Alert.alert('Save Failed', error);
   }, [error]);
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <ScreenHeader title="Add Sample" subtitle="Capture images and enter sample details" />
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.content}
+      >
+        <ScreenHeader
+          title="Add Sample"
+          subtitle="Capture images and enter sample details"
+        />
 
-          <Text style={styles.sectionTitle}>Image Section</Text>
-          <ActionButton label="Capture Images" onPress={openCamera} />
-          <ImageThumbnailList
-            images={images.map((image) => image.uri)}
-            onRemove={removeImage}
-          />
-
-          <Text style={styles.sectionTitle}>Sample Information</Text>
-          <Controller
-            control={control}
-            name="cloneNumber"
-            rules={{ required: 'Clone number is required' }}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <FormField
-                label="Clone Number"
-                placeholder="e.g. V1 or TV1"
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                error={errors.cloneNumber?.message}
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="treeNumber"
-            rules={{ required: 'Tree number is required' }}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <FormField
-                label="Tree Number"
-                placeholder="e.g. 12"
-                keyboardType="number-pad"
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                error={errors.treeNumber?.message}
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="leafNumber"
-            rules={{ required: 'Leaf number is required' }}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <FormField
-                label="Leaf Number"
-                placeholder="e.g. 3"
-                keyboardType="number-pad"
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                error={errors.leafNumber?.message}
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="leafPosition"
-            rules={{ required: 'Leaf position is required' }}
-            render={({ field: { onChange, value } }) => (
-              <DropdownField
-                label="Leaf Number"
-                placeholder="Select leaf position"
-                value={value}
-                onValueChange={onChange}
-                options={leafOptions}
-                error={errors.leafPosition?.message}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="meterTaken"
-            render={({ field: { value, onChange } }) => (
-              <CheckboxRow label="Meter Reading Taken?" value={value} onValueChange={onChange} />
-            )}
-          />
-          <Controller
-            control={control}
-            name="wetLabRequired"
-            render={({ field: { value, onChange } }) => (
-              <CheckboxRow label="Wet Lab Required?" value={value} onValueChange={onChange} />
-            )}
-          />
-          <Controller
-            control={control}
-            name="notes"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <FormField
-                label="Notes (optional)"
-                placeholder="Additional observations"
-                multiline
-                numberOfLines={3}
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                style={styles.notesInput}
-              />
-            )}
-          />
-
-          {deviceInfo ? (
-            <AutoInfoPanel
-              sampleIdPreview={sampleIdPreview}
-              timestamp={toIsoTimestamp(now)}
-              latitude={coordinates?.latitude ?? null}
-              longitude={coordinates?.longitude ?? null}
-              deviceManufacturer={deviceInfo.manufacturer}
-              deviceModel={deviceInfo.model}
-              installationId={deviceInfo.installationId}
-              appVersion={deviceInfo.appVersion}
+        <View style={styles.sections}>
+          <SectionCard title="Images">
+            <ActionButton
+              label="Capture Images"
+              onPress={openCamera}
             />
-          ) : null}
 
-          {gpsLoading ? <Text style={styles.helper}>Reading GPS...</Text> : null}
+            <ImageThumbnailList
+              images={images.map((image) => image.uri)}
+              onRemove={removeImage}
+            />
+          </SectionCard>
+
+          <SampleFields control={control} />
+
+          {deviceInfo && (
+            <SectionCard title="Automatic Information">
+              <AutoInfoPanel
+                sampleIdPreview={sampleIdPreview}
+                timestamp={toIsoTimestamp(now)}
+                latitude={coordinates?.latitude ?? null}
+                longitude={coordinates?.longitude ?? null}
+                deviceManufacturer={deviceInfo.manufacturer}
+                deviceModel={deviceInfo.model}
+                installationId={deviceInfo.installationId}
+                appVersion={deviceInfo.appVersion}
+              />
+            </SectionCard>
+          )}
+
+          {gpsLoading && (
+            <Text style={styles.helper}>
+              Reading GPS...
+            </Text>
+          )}
 
           <View style={styles.actions}>
-            <ActionButton label={saving ? 'Saving...' : 'Save Sample'} onPress={onSubmit} disabled={saving} />
-            <ActionButton label="Back" onPress={() => router.back()} variant="secondary" />
-          </View>
+            <ActionButton
+              label={saving ? 'Saving...' : 'Save Sample'}
+              onPress={onSubmit}
+              disabled={saving}
+            />
 
-          <CameraModal
-            visible={showCamera}
-            onClose={() => setShowCamera(false)}
-            onCapture={handleCapture}
-          />
-        </ScrollView>
-      </SafeAreaView>
-    </SafeAreaProvider>
+            <ActionButton
+              label="Back"
+              variant="secondary"
+              onPress={() => router.back()}
+            />
+          </View>
+        </View>
+      </ScrollView>
+
+      <CameraModal
+        visible={showCamera}
+        onClose={() => setShowCamera(false)}
+        onCapture={handleCapture}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    padding: SPACING.lg,
-    paddingVertical: SPACING.xs,
+  container: {
+    flex: 1,
     backgroundColor: COLORS.background,
+  },
+
+  content: {
     flexGrow: 1,
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.sm,
+    paddingBottom: SPACING.xl,
   },
-  sectionTitle: {
-    fontSize: FONT_SIZES.subtitle,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: SPACING.lg,
-    marginBottom: SPACING.sm,
+
+  sections: {
+    gap: LAYOUT.sectionGap,
   },
-  notesInput: {
-    minHeight: 96,
-    textAlignVertical: 'top',
-  },
+
   actions: {
-    gap: SPACING.sm,
-    marginBottom: SPACING.xl,
+    gap: SPACING.md,
   },
+
   helper: {
     fontSize: FONT_SIZES.body,
     color: COLORS.textSecondary,
-    marginBottom: SPACING.sm,
+    textAlign: 'center',
   },
 });

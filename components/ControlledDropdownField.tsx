@@ -33,15 +33,25 @@ export function ControlledDropdownField<
     <Controller
       control={control}
       name={name}
-      render={({ field, fieldState }) => (
-        <DropdownField
-          label={label}
-          value={field.value}
-          options={options}
-          onValueChange={field.onChange}
-          error={fieldState.error?.message}
-        />
-      )}
+      render={({ field, fieldState }) => {
+        console.log(label, {
+          value: field.value,
+          options,
+        });
+
+        return (
+          <DropdownField
+            label={label}
+            value={field.value}
+            options={options}
+            onValueChange={(value) => {
+              console.log(`${label} changed to`, value);
+              field.onChange(value);
+            }}
+            error={fieldState.error?.message}
+          />
+        );
+      }}
     />
   );
 }

@@ -6,7 +6,7 @@ import { ActionButton } from '@/components/ActionButton';
 import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { useDeviceStore } from '@/store/deviceStore';
 
-export function HomeScreen() {
+export default function HomeScreen() {
   const deviceInfo = useDeviceStore((state) => state.deviceInfo);
 
   const handleExit = () => {

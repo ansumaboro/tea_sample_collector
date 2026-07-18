@@ -1,3 +1,3 @@
-import { ExportScreen } from '@/screens/ExportScreen';
+import ExportScreen from '@/screens/ExportScreen';
 
 export default ExportScreen;

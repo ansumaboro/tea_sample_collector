@@ -1,3 +1,3 @@
-import { EditSampleScreen } from '@/screens/EditSampleScreen';
+import EditSampleScreen from '@/screens/EditSampleScreen';
 
 export default EditSampleScreen;

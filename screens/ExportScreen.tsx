@@ -9,7 +9,7 @@ import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { sampleRepository } from '@/database/sampleRepository';
 import { clearRecords, exportRecordsToFile } from '@/services/exportService';
 
-export function ExportScreen() {
+export default function ExportScreen() {
   const [recordCount, setRecordCount] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [clearing, setClearing] = useState(false);

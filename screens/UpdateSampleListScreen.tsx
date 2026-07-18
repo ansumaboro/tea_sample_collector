@@ -33,10 +33,10 @@ const searchOptions = [
   { label: 'Tree Number', value: 'tree_number' },
   { label: 'Leaf Number', value: 'leaf_number' },
   { label: 'Leaf Position', value: 'leaf_position' },
-  { label: 'Notes', value: 'notes' },
+  { label: 'Remarks', value: 'remarks' },
 ];
 
-export function UpdateSampleListScreen() {
+export default function UpdateSampleListScreen() {
   const {
     samples,
     loading,

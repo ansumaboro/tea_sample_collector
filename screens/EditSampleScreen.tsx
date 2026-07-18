@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -29,16 +29,15 @@ import {
 import { sampleRepository } from '@/database/sampleRepository';
 
 import { useImageCapture } from '@/hooks/useImageCapture';
-import { useLocationCapture } from '@/hooks/useLocation';
 
 import type {
   Sample,
   SampleFormInput,
 } from '@/types/sample';
 
-import { toIsoTimestamp } from '@/utils/dateFormat';
+import { validateSample } from '@/utils/sampleValidation';
 
-export function EditSampleScreen() {
+export default function EditSampleScreen() {
   const { id } = useLocalSearchParams<{
     id: string;
   }>();
@@ -47,12 +46,6 @@ export function EditSampleScreen() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  const {
-    coordinates,
-    captureLocation,
-    loading: gpsLoading,
-  } = useLocationCapture();
 
   const {
     control,
@@ -108,10 +101,6 @@ export function EditSampleScreen() {
     leafNumber,
     installationId: sample?.installationId,
   });
-
-  useEffect(() => {
-    captureLocation();
-  }, [captureLocation]);
 
   useEffect(() => {
     async function loadSample() {
@@ -171,6 +160,17 @@ export function EditSampleScreen() {
 
   const onSubmit = handleSubmit(async (values) => {
     if (!sample) return;
+
+    const validation = validateSample(values);
+
+    if (!validation.valid) {
+      Alert.alert(
+        'Validation Error',
+        validation.message,
+      );
+      return;
+    }
+
 
     try {
       setSaving(true);
@@ -264,26 +264,14 @@ export function EditSampleScreen() {
               <AutoInfoPanel
                 sampleIdPreview={sample.id}
                 timestamp={sample.createdAt}
-                latitude={
-                  coordinates?.latitude ??
-                  sample.gpsLatitude
-                }
-                longitude={
-                  coordinates?.longitude ??
-                  sample.gpsLongitude
-                }
+                latitude={sample.gpsLatitude}
+                longitude={sample.gpsLongitude}
                 deviceManufacturer={sample.deviceManufacturer}
                 deviceModel={sample.deviceModel}
                 installationId={sample.installationId}
                 appVersion={sample.appVersion}
               />
             </SectionCard>
-          )}
-
-          {gpsLoading && (
-            <Text style={styles.helper}>
-              Reading GPS...
-            </Text>
           )}
 
           <View style={styles.actions}>

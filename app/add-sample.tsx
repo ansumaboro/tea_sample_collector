@@ -1,3 +1,3 @@
-import { AddSampleScreen } from '@/screens/AddSampleScreen';
+import AddSampleScreen from '@/screens/AddSampleScreen';
 
 export default AddSampleScreen;

@@ -33,7 +33,9 @@ import {
   sanitizeDeviceModel,
 } from '@/utils/sampleId';
 
-export function AddSampleScreen() {
+import { validateSample } from '@/utils/sampleValidation';
+
+export default function AddSampleScreen() {
   const deviceInfo = useDeviceStore((state) => state.deviceInfo);
 
   const { saveSample, saving, error } = useSaveSample();
@@ -115,6 +117,17 @@ export function AddSampleScreen() {
   }, [deviceInfo, now]);
 
   const onSubmit = handleSubmit(async (values) => {
+
+    const validation = validateSample(values);
+
+    if (!validation.valid) {
+      Alert.alert(
+        'Validation Error',
+        validation.message,
+      );
+      return;
+    }
+
     const sample = await saveSample({
       ...values,
       images: images.map((image) => image.filePath ?? image.uri),

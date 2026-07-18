@@ -6,20 +6,33 @@ const CSV_COLUMNS = [
   'tree_number',
   'leaf_number',
   'leaf_position',
-  'meter_taken',
+  'meter_reading_1',
+  'meter_reading_2',
+  'meter_reading_3',
   'wet_lab_required',
   'wet_lab_completed',
+  'flush',
   'gps_latitude',
   'gps_longitude',
+  'gps_accuracy',
+  'garden_name',
+  'section_name',
+  'wilting',
+  'chlorosis',
+  'scorching',
+  'pest_damage',
+  'disease',
   'device_model',
   'device_manufacturer',
+  'os_name',
+  'os_version',
   'installation_id',
   'app_version',
   'image_count',
   'image_paths',
+  'remarks',
   'created_at',
   'updated_at',
-  'notes',
 ] as const;
 
 function escapeCsvValue(value: string | number | boolean | null | undefined): string {
@@ -32,30 +45,41 @@ function escapeCsvValue(value: string | number | boolean | null | undefined): st
 }
 
 function sampleToRow(sample: Sample): string[] {
-  for (const image in sample.images){
-    const imageName = sample.images[image].split('/').pop() || "none.jpg"
-    sample.images[image] = imageName;
-  }
+  // Create a copy of images array to not modify the original
+  const imageNames = sample.images.map((imagePath) => imagePath.split('/').pop() || "none.png");
   return [
     sample.id,
     sample.cloneNumber,
     sample.treeNumber,
     sample.leafNumber,
     sample.leafPosition,
-    sample.meterTaken,
+    sample.meterReading1,
+    sample.meterReading2,
+    sample.meterReading3,
     sample.wetLabRequired,
     sample.wetLabCompleted,
+    sample.flush,
     sample.gpsLatitude,
     sample.gpsLongitude,
+    sample.gpsAccuracy,
+    sample.gardenName,
+    sample.sectionName,
+    sample.wilting,
+    sample.chlorosis,
+    sample.scorching,
+    sample.pestDamage,
+    sample.disease,
     sample.deviceModel,
     sample.deviceManufacturer,
+    sample.osName,
+    sample.osVersion,
     sample.installationId,
     sample.appVersion,
-    sample.images.length,
-    sample.images.join('|'),
+    imageNames.length,
+    imageNames.join('|'),
+    sample.remarks,
     sample.createdAt,
     sample.updatedAt,
-    sample.notes,
   ].map(escapeCsvValue);
 }
 

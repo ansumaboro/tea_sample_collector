@@ -1,6 +1,6 @@
-import { useCameraPermissions } from 'expo-camera';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
+import { useCameraPermission } from 'react-native-vision-camera';
 
 import { saveSampleImage } from '@/services/imageService';
 
@@ -17,22 +17,27 @@ interface UseImageCaptureOptions {
 }
 
 export function useImageCapture(options: UseImageCaptureOptions) {
-  const [permission, requestPermission] = useCameraPermissions();
+  const { hasPermission, requestPermission } = useCameraPermission();
   const [images, setImages] = useState<CapturedImage[]>([]);
   const [showCamera, setShowCamera] = useState(false);
 
+  useEffect(() => {
+    if (!hasPermission) {
+      requestPermission();
+    }
+  }, [hasPermission, requestPermission]);
 
   const openCamera = useCallback(async () => {
-    if (!permission?.granted) {
-      const result = await requestPermission();
-      if (!result.granted) {
+    if (!hasPermission) {
+      await requestPermission();
+      if (!hasPermission) {
         Alert.alert('Camera permission', 'Camera access is required to capture leaf images.');
         return;
       }
     }
 
     setShowCamera(true);
-  }, [permission, requestPermission]);
+  }, [hasPermission, requestPermission]);
 
   const handleCapture = useCallback(
     (tempUri: string) => {

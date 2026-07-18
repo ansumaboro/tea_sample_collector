@@ -68,5 +68,5 @@ export function generateImageFileName(
   // const prefix = buildSamplePrefix(parts);
   const installationId = parts.installationId;
   const timestamp = formatSampleTimestamp(parts.timestamp ?? new Date())
-  return `${installationId}-${timestamp}-img${index}.jpg`;
+  return `${installationId}-${timestamp}-img${index}`;
 }

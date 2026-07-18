@@ -1,9 +1,10 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
+import { Modal, StyleSheet, Text, View } from 'react-native';
+import { Camera, useCameraDevice, useCameraPermission, usePhotoOutput } from 'react-native-vision-camera';
 
 import { ActionButton } from '@/components/ActionButton';
 import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface CameraModalProps {
   visible: boolean;
@@ -12,34 +13,57 @@ interface CameraModalProps {
 }
 
 export function CameraModal({ visible, onClose, onCapture }: CameraModalProps) {
-  const cameraRef = useRef<CameraView>(null);
-  const [permission] = useCameraPermissions();
+  const { hasPermission, requestPermission } = useCameraPermission();
   const [capturing, setCapturing] = useState(false);
+  const device = useCameraDevice('back');
+  const photoOutput = usePhotoOutput();
 
   const handleCapture = async () => {
-    if (!cameraRef.current || capturing) return;
+    if (!device || capturing) return;
 
     setCapturing(true);
+    let photo;
+    let image;
     try {
-      const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.85,
-        skipProcessing: false,
-      });
-      if (photo?.uri) {
-        onCapture(photo.uri);
-      }
+      photo = await photoOutput.capturePhoto(
+        { flashMode: 'off', enableShutterSound: false },
+        {}
+      );
+      image = await photo.toImageAsync();
+      const tempPngPath = await image.saveToTemporaryFileAsync('png');
+      onCapture(tempPngPath);
     } catch (error) {
       console.error('Camera capture failed:', error);
     } finally {
+      // Dispose native objects to avoid memory leaks and JPromise issues
+      if (photo) {
+        try {
+          photo.dispose();
+        } catch (e) {
+          console.warn('Failed to dispose photo:', e);
+        }
+      }
+      if (image) {
+        try {
+          image.dispose();
+        } catch (e) {
+          console.warn('Failed to dispose image:', e);
+        }
+      }
       setCapturing(false);
     }
   };
 
   return (
     <Modal animationType="slide" visible={visible} onRequestClose={onClose}>
-      <View style={styles.container}>
-        {permission?.granted ? (
-          <CameraView ref={cameraRef} style={styles.camera} facing="back" />
+      <SafeAreaView style={styles.container}>
+        {hasPermission && device ? (
+          <Camera
+            style={styles.camera}
+            device={device}
+            isActive={visible}
+            outputs={[photoOutput]}
+          />
         ) : (
           <View style={styles.permissionBox}>
             <Text style={styles.permissionText}>Camera permission is required.</Text>
@@ -50,7 +74,7 @@ export function CameraModal({ visible, onClose, onCapture }: CameraModalProps) {
           <ActionButton label="Capture Photo" onPress={handleCapture} disabled={capturing} />
           <ActionButton label="Close Camera" onPress={onClose} variant="secondary" />
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }

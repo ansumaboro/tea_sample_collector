@@ -32,9 +32,9 @@ export async function exportImages(directory: Directory) {
       try {
         const sourceFile = new File(imageUri);
         const bytes = await sourceFile.bytes();
-        const fileName = imageUri.split('/').pop() || 'none.jpg';
+        const fileName = imageUri.split('/').pop() || 'none.png';
 
-        const destinationFile = imageDirectory.createFile(fileName, 'image/jpeg');
+        const destinationFile = imageDirectory.createFile(fileName, 'image/png');
         destinationFile.write(bytes);
       } catch (error) {
         console.warn(

@@ -32,7 +32,11 @@ export function saveSampleImage(params: SaveImageParams): string {
   );
 
   const destination = new File(root, fileName);
-  const source = new File(params.tempUri);
+  // Ensure we have a proper file URI (add file:// if missing)
+  const sourceUri = params.tempUri.startsWith('file://') 
+    ? params.tempUri 
+    : `file://${params.tempUri}`;
+  const source = new File(sourceUri);
 
   if (!source.exists) {
     throw new Error('Captured image file not found.');
@@ -50,7 +54,11 @@ export function saveSampleImage(params: SaveImageParams): string {
 /** Delete image file from disk if it exists. */
 export function deleteSampleImage(filePath: string): void {
   try {
-    const file = new File(filePath);
+    // Ensure we have a proper file URI (add file:// if missing)
+    const fileUri = filePath.startsWith('file://') 
+      ? filePath 
+      : `file://${filePath}`;
+    const file = new File(fileUri);
     if (file.exists) {
       file.delete();
     }

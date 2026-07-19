@@ -30,6 +30,7 @@
     "react-dom": "19.2.3",
     "react-hook-form": "^7.81.0",
     "react-native": "0.86.0",
+    "react-native-element-dropdown": "^2.12.4",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-nitro-image": "^0.15.1",
     "react-native-nitro-modules": "^0.36.1",

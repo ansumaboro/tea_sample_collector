@@ -1,11 +1,12 @@
-import { Picker } from '@react-native-picker/picker';
+import { Dropdown } from 'react-native-element-dropdown';
 import { StyleSheet, Text, View } from 'react-native';
 
 import {
-    COLORS,
-    FONT_SIZES,
-    INPUT_HEIGHT,
-    SPACING,
+  COLORS,
+  FONT_SIZES,
+  INPUT_HEIGHT,
+  SPACING,
+  RADIUS,
 } from '@/constants/theme';
 
 interface DropdownOption {
@@ -32,39 +33,36 @@ export function DropdownField({
 }: DropdownFieldProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label}>
+        {label}
+      </Text>
 
-      <View
+      <Dropdown
         style={[
-          styles.input,
-          error ? styles.inputError : null,
+          styles.dropdown,
+          error && styles.dropdownError,
         ]}
-      >
-        <Picker
-          selectedValue={value}
-          onValueChange={onValueChange}
-          style={styles.picker}
-          dropdownIconColor={COLORS.text}
-        >
-          <Picker.Item
-            label={placeholder}
-            value=""
-            color={COLORS.textSecondary}
-          />
+        containerStyle={styles.dropdownContainer}
+        itemContainerStyle={styles.itemContainer}
+        activeColor="#E8F5E9"
+        iconColor={COLORS.text}
+        data={options}
+        labelField="label"
+        valueField="value"
+        placeholder={placeholder}
+        value={value}
+        maxHeight={320}
+        onChange={(item) => onValueChange(item.value)}
+        placeholderStyle={styles.placeholder}
+        selectedTextStyle={styles.selectedText}
+        itemTextStyle={styles.itemText}
+      />
 
-          {options.map((option) => (
-            <Picker.Item
-              key={option.value}
-              label={option.label}
-              value={option.value}
-            />
-          ))}
-        </Picker>
-      </View>
-
-      {error ? (
-        <Text style={styles.error}>{error}</Text>
-      ) : null}
+      {error && (
+        <Text style={styles.error}>
+          {error}
+        </Text>
+      )}
     </View>
   );
 }
@@ -81,28 +79,53 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
 
-  input: {
-    minHeight: INPUT_HEIGHT,
+  dropdown: {
+    height: INPUT_HEIGHT,
+
     borderWidth: 2,
     borderColor: COLORS.border,
-    borderRadius: 8,
+
+    borderRadius: RADIUS.sm,
+
     backgroundColor: COLORS.surface,
-    justifyContent: 'center',
+
+    paddingHorizontal: SPACING.md,
+  },
+
+  dropdownError: {
+    borderColor: COLORS.danger,
+  },
+
+  dropdownContainer: {
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     overflow: 'hidden',
   },
 
-  picker: {
-    height: INPUT_HEIGHT,
-    color: COLORS.text,
+  itemContainer: {
+    height: 56,
+    justifyContent: 'center',
   },
 
-  inputError: {
-    borderColor: COLORS.danger,
+  selectedText: {
+    color: COLORS.text,
+    fontSize: FONT_SIZES.input,
+  },
+
+  placeholder: {
+    color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.input,
+  },
+
+  itemText: {
+    color: COLORS.text,
+    fontSize: FONT_SIZES.input,
   },
 
   error: {
     marginTop: SPACING.xs,
     color: COLORS.danger,
-    fontSize: FONT_SIZES.body,
+    fontSize: FONT_SIZES.helper,
   },
 });

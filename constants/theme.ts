@@ -28,8 +28,8 @@ export const SPACING = {
 
 export const FONT_SIZES = {
   label: 18,
-  input: 20,
-  body: 18,
+  input: 16,
+  body: 16,
 
   button: 22,
 

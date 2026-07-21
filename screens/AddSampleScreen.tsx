@@ -88,10 +88,6 @@ export default function AddSampleScreen() {
   const treeNumber = watch('treeNumber');
   const leafNumber = watch('leafNumber');
   
-  useEffect(() => {
-    captureLocation();
-  }, [captureLocation]);
-  
   const {
     images,
     showCamera,
@@ -106,7 +102,6 @@ export default function AddSampleScreen() {
     leafNumber,
     installationId: deviceInfo?.installationId,
   });
-
 
   // Refresh location whenever screen regains focus (e.g., user comes back from settings)
   useFocusEffect(

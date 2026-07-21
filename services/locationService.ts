@@ -18,8 +18,12 @@ export async function checkLocationServicesEnabled(): Promise<boolean> {
 /** Request location permission only. */
 export async function requestLocationPermission(): Promise<'undetermined' | 'granted' | 'denied'> {
   try {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    return status;
+    const current = await Location.getForegroundPermissionsAsync();
+    if(current.status !== "granted"){
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      return status;
+    }
+    return current.status;
   } catch (error) {
     console.warn('Failed to request location permission:', error);
     return 'denied';
@@ -35,7 +39,7 @@ export async function getCurrentCoordinates(): Promise<GpsCoordinates | null> {
       return null;
     }
 
-    const { status } = await Location.requestForegroundPermissionsAsync();
+    const status = await requestLocationPermission();
 
     if (status !== 'granted') {
       return null;

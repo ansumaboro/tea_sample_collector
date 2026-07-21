@@ -245,7 +245,7 @@ export default function EditSampleScreen() {
         />
 
         <View style={styles.sections}>
-          <SectionCard title="Leaf Images (Optional)">
+          <SectionCard title="Leaf Images">
             <ActionButton
               label="Capture Images"
               onPress={openCamera}

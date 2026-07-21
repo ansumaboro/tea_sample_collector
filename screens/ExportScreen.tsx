@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActionButton } from '@/components/ActionButton';
@@ -98,7 +98,7 @@ export default function ExportScreen() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.page}>
-        <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.container}>
           <ScreenHeader title="Export Records" subtitle="Generate CSV from local database" />
 
           <View style={styles.card}>
@@ -127,7 +127,7 @@ export default function ExportScreen() {
             variant="danger"
           />
           <ActionButton label="Back" onPress={() => router.back()} variant="secondary" />
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -141,6 +141,7 @@ const styles = StyleSheet.create({
   container: {
     padding: SPACING.lg,
     gap: SPACING.md,
+    paddingBottom: SPACING.md,
   },
   card: {
     borderWidth: 2,
@@ -166,6 +167,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.text,
     marginBottom: SPACING.sm,
+  },
+  actions: {
+    gap: SPACING.md,
   },
   help: {
     fontSize: FONT_SIZES.body,

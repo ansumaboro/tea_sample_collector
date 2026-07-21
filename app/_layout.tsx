@@ -1,11 +1,12 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { getDatabase } from '@/database/connection';
+import { useLocationCapture } from '@/hooks/useLocation';
 import { useDeviceStore } from '@/store/deviceStore';
 import { useEffect } from 'react';
 
@@ -14,10 +15,28 @@ export default function RootLayout() {
   const isReady = useDeviceStore((state) => state.isReady);
   const error = useDeviceStore((state) => state.error);
 
+  const {
+    coordinates,
+    captureLocation,
+  } = useLocationCapture();
+
   useEffect(() => {
     async function bootstrap() {
       await getDatabase();
       await initializeDevice();
+
+      captureLocation().then((coords) => {
+        if (!coords) {
+          Alert.alert(
+            'Location Required',
+            'Please enable location services and grant permission to continue.',
+            [
+              { text: 'Ok', onPress: captureLocation }
+            ]
+          );
+          return;
+        }
+      })
     }
     bootstrap().catch((bootstrapError) => {
       console.error('App bootstrap failed:', bootstrapError);

@@ -6,10 +6,35 @@ export interface GpsCoordinates {
   accuracy: number | null;
 }
 
-/** Request permission and read current GPS coordinates. */
+/** Check if location services are enabled on the device */
+export async function checkLocationServicesEnabled(): Promise<boolean> {
+  try {
+    return await Location.hasServicesEnabledAsync();
+  } catch {
+    return false;
+  }
+}
+
+/** Request location permission only. */
+export async function requestLocationPermission(): Promise<'undetermined' | 'granted' | 'denied'> {
+  try {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    return status;
+  } catch (error) {
+    console.warn('Failed to request location permission:', error);
+    return 'denied';
+  }
+}
+
 /** Request permission and read current GPS coordinates. */
 export async function getCurrentCoordinates(): Promise<GpsCoordinates | null> {
   try {
+    const servicesEnabled = await checkLocationServicesEnabled();
+    if (!servicesEnabled) {
+      // Can't programmatically enable, so just return null - let UI handle showing error to user
+      return null;
+    }
+
     const { status } = await Location.requestForegroundPermissionsAsync();
 
     if (status !== 'granted') {
@@ -32,9 +57,13 @@ export async function getCurrentCoordinates(): Promise<GpsCoordinates | null> {
 }
 
 /** Best-effort last known location when fresh fix is unavailable. */
-/** Best-effort last known location when fresh fix is unavailable. */
 export async function getLastKnownCoordinates(): Promise<GpsCoordinates | null> {
   try {
+    const servicesEnabled = await checkLocationServicesEnabled();
+    if (!servicesEnabled) {
+      return null;
+    }
+
     const position = await Location.getLastKnownPositionAsync();
 
     if (!position) {

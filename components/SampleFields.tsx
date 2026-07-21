@@ -13,9 +13,7 @@ interface SampleFieldsProps {
   control: Control<SampleFormInput>;
 }
 
-export function SampleFields({
-  control,
-}: SampleFieldsProps) {
+export function SampleFields({ control }: SampleFieldsProps) {
   return (
     <View style={styles.container}>
       <SampleInformationSection control={control} />

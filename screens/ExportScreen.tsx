@@ -6,17 +6,28 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/ActionButton';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
-import { sampleRepository } from '@/database/sampleRepository';
-import { clearRecords, exportRecordsToFile } from '@/services/exportService';
+import { clearRecords, exportRecordsToFile, getExportCounts } from '@/services/exportService';
 
 export default function ExportScreen() {
   const [recordCount, setRecordCount] = useState(0);
+  const [exportableCount, setExportableCount] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [clearing, setClearing] = useState(false);
 
-  useEffect(() => {
-    sampleRepository.count().then(setRecordCount).catch(() => setRecordCount(0));
+  const loadCounts = useCallback(async () => {
+    try {
+      const counts = await getExportCounts();
+      setRecordCount(counts.totalCount);
+      setExportableCount(counts.exportableCount);
+    } catch {
+      setRecordCount(0);
+      setExportableCount(0);
+    }
   }, []);
+
+  useEffect(() => {
+    loadCounts();
+  }, [loadCounts]);
 
   const handleExport = useCallback(async () => {
     if (recordCount === 0) {
@@ -24,12 +35,18 @@ export default function ExportScreen() {
       return;
     }
 
+    if (exportableCount === 0) {
+      Alert.alert('No exportable records', 'Only samples with images can be exported.');
+      return;
+    }
+
     setExporting(true);
     try {
       const result = await exportRecordsToFile();
+      await loadCounts();
       Alert.alert(
         'Export complete',
-        `Exported ${result.recordCount} record(s).\n\nFile: ${result.filePath}`,
+        `Exported ${result.recordCount} sample(s).\nLeft to export: ${result.skippedCount} sample(s) without images.\n\nFile: ${result.filePath}`,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Export failed.';
@@ -39,7 +56,7 @@ export default function ExportScreen() {
     } finally {
       setExporting(false);
     }
-  }, [recordCount]);
+  }, [exportableCount, loadCounts, recordCount]);
 
   const handleClear = useCallback(() => {
     Alert.alert(
@@ -60,6 +77,7 @@ export default function ExportScreen() {
               await clearRecords();
 
               setRecordCount(0);
+              setExportableCount(0);
 
               Alert.alert(
                 'Records Cleared',
@@ -86,9 +104,14 @@ export default function ExportScreen() {
           <View style={styles.card}>
             <Text style={styles.statLabel}>Total samples</Text>
             <Text style={styles.statValue}>{recordCount}</Text>
+            <Text style={styles.statLabel}>Ready to export</Text>
+            <Text style={styles.statSubValue}>{exportableCount}</Text>
+            <Text style={styles.statLabel}>Left to export</Text>
+            <Text style={styles.statSubValue}>{recordCount - exportableCount}</Text>
             <Text style={styles.help}>
-              On Android, you will be asked to choose a folder using the system file picker (Storage
-              Access Framework). The CSV file will be saved there.
+              Only samples with images are exported. On Android, you will be asked to choose a
+              folder using the system file picker (Storage Access Framework). The CSV file will be
+              saved there.
             </Text>
           </View>
 
@@ -137,6 +160,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: COLORS.primary,
     marginBottom: SPACING.md,
+  },
+  statSubValue: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
   },
   help: {
     fontSize: FONT_SIZES.body,

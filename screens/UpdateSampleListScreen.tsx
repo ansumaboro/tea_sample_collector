@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useCallback, useEffect } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -37,19 +37,18 @@ const searchOptions = [
 ];
 
 export default function UpdateSampleListScreen() {
-  const {
-    samples,
-    loading,
-    searchQuery,
-    searchField,
-    loadSamples,
-    setSearchQuery,
-    setSearchField,
-  } = useSampleStore();
+  const samples = useSampleStore((state) => state.samples);
+  const loading = useSampleStore((state) => state.loading);
+  const searchQuery = useSampleStore((state) => state.searchQuery);
+  const searchField = useSampleStore((state) => state.searchField);
+  const loadSamples = useSampleStore((state) => state.loadSamples);
+  const setSearchQuery = useSampleStore((state) => state.setSearchQuery);
+  const setSearchField = useSampleStore((state) => state.setSearchField);
 
-  useEffect(() => {
-    loadSamples();
-  }, [loadSamples]);
+  useFocusEffect(() => {
+    loadSamples()
+  }
+  );
 
   const handleSearch = useCallback(
     (text: string) => {

@@ -26,6 +26,9 @@ export const useSampleStore = create<SampleStore>((set, get) => ({
   searchField: 'all',
 
   loadSamples: async (query?: string, field?: SampleSearchField) => {
+    const { loading } = get();
+    if (loading) return;
+
     const searchQuery = query ?? get().searchQuery;
     const searchField = field ?? get().searchField;
 
@@ -39,7 +42,6 @@ export const useSampleStore = create<SampleStore>((set, get) => ({
         searchQuery.trim().length > 0
           ? await sampleRepository.search(searchQuery, searchField)
           : await sampleRepository.getAll();
-
       set({
         samples,
         loading: false,

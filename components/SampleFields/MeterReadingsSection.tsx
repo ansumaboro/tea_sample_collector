@@ -12,7 +12,7 @@ export function MeterReadingsSection({
   control,
 }: MeterReadingsSectionProps) {
   return (
-    <SectionCard title="Meter Readings">
+    <SectionCard title="Chlorophyll Meter Readings">
       <ControlledFormField
         control={control}
         name="meterReading1"

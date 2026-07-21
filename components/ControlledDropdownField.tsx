@@ -1,4 +1,4 @@
-import { Control, Controller, FieldPath } from 'react-hook-form';
+import { Control, Controller } from 'react-hook-form';
 
 import { DropdownField } from '@/components/DropdownField';
 import type { SampleFormInput } from '@/types/sample';
@@ -34,18 +34,12 @@ export function ControlledDropdownField<
       control={control}
       name={name}
       render={({ field, fieldState }) => {
-        console.log(label, {
-          value: field.value,
-          options,
-        });
-
         return (
           <DropdownField
             label={label}
             value={field.value}
             options={options}
             onValueChange={(value) => {
-              console.log(`${label} changed to`, value);
               field.onChange(value);
             }}
             error={fieldState.error?.message}

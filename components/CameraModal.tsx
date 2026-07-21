@@ -31,25 +31,36 @@ export function CameraModal({ visible, onClose, onCapture }: CameraModalProps) {
       );
       image = await photo.toImageAsync();
       const tempPngPath = await image.saveToTemporaryFileAsync('png');
+      // Make 100% sure the file exists before disposing
+      // Hold references a tiny bit longer to avoid premature GC
+      await new Promise(resolve => setTimeout(resolve, 100));
       onCapture(tempPngPath);
     } catch (error) {
       console.error('Camera capture failed:', error);
     } finally {
       // Dispose native objects to avoid memory leaks and JPromise issues
+      // Keep variables in scope to prevent GC during dispose
       if (photo) {
         try {
-          photo.dispose();
+          // Keep reference during dispose
+          const p = photo;
+          p.dispose();
         } catch (e) {
           console.warn('Failed to dispose photo:', e);
         }
       }
       if (image) {
         try {
-          image.dispose();
+          // Keep reference during dispose
+          const i = image;
+          i.dispose();
         } catch (e) {
           console.warn('Failed to dispose image:', e);
         }
       }
+      // Null out references only after dispose completes
+      photo = null;
+      image = null;
       setCapturing(false);
     }
   };

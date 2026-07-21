@@ -2,12 +2,13 @@ import { useCallback, useState } from 'react';
 
 import { sampleRepository } from '@/database/sampleRepository';
 import { getDeviceInfo } from '@/services/deviceService';
-import { resolveCoordinates } from '@/services/locationService';
 import { buildSampleId } from '@/services/sampleIdService';
 import type { Sample, SampleFormInput } from '@/types/sample';
+import type { GpsCoordinates } from '@/services/locationService';
 
 interface SaveSampleParams extends SampleFormInput {
   images: string[];
+  coordinates: GpsCoordinates | null;
 }
 
 export function useSaveSample() {
@@ -19,28 +20,17 @@ export function useSaveSample() {
     setError(null);
 
     try {
-      // if (input.images.length === 0) {
-      //   throw new Error('Capture at least one image before saving.');
-      // }
-
-      const [device, coordinates] = await Promise.all([
-        getDeviceInfo(),
-        resolveCoordinates(),
-        // buildSampleId({
-        //   cloneNumber: input.cloneNumber,
-        //   treeNumber: input.treeNumber,
-        //   leafNumber: input.leafNumber,
-        // }),
-      ]);
-      const sampleId = await buildSampleId()
+      const { coordinates, ...sampleInput } = input;
+      const device = await getDeviceInfo();
+      const sampleId = await buildSampleId();
 
       const sample = await sampleRepository.create({
-        ...input,
+        ...sampleInput,
 
         meterReading1: parseFloat(input.meterReading1),
         meterReading2: parseFloat(input.meterReading2),
         meterReading3: parseFloat(input.meterReading3),
-        
+
         id: sampleId,
 
         gpsLatitude: coordinates?.latitude ?? null,

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Tea Sample Collector",
+    "name": "Tea Leaf Data Collector",
     "slug": "teaSampleCollector",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,7 +10,7 @@
     "ios": {
       "icon": "./assets/expo.icon",
       "infoPlist": {
-        "NSCameraUsageDescription": "Allow Tea Sample Collector to access your camera"
+        "NSCameraUsageDescription": "Allow Tea Leaf Data Collector to access your camera"
       },
       "bundleIdentifier": "com.ansuma-boro.teaSampleCollector"
     },
@@ -38,7 +38,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow Tea Sample Collector to record GPS coordinates with each sample."
+          "locationWhenInUsePermission": "Allow Tea Leaf Data Collector to record GPS coordinates with each sample."
         }
       ],
       [

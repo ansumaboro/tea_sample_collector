@@ -1,8 +1,8 @@
-import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useForm } from 'react-hook-form';
 
 import { ActionButton } from '@/components/ActionButton';
 import { AutoInfoPanel } from '@/components/AutoInfoPanel';
@@ -44,6 +44,7 @@ export default function AddSampleScreen() {
     coordinates,
     captureLocation,
     loading: gpsLoading,
+    error: gpsError,
   } = useLocationCapture();
 
   const [now] = useState(() => new Date());
@@ -58,7 +59,7 @@ export default function AddSampleScreen() {
       treeNumber: '',
       leafNumber: '',
 
-      leafPosition: '3rd_leaf',
+      leafPosition: '1st_leaf',
 
       meterReading1: '',
       meterReading2: '',
@@ -86,7 +87,11 @@ export default function AddSampleScreen() {
   const cloneNumber = watch('cloneNumber');
   const treeNumber = watch('treeNumber');
   const leafNumber = watch('leafNumber');
-
+  
+  useEffect(() => {
+    captureLocation();
+  }, [captureLocation]);
+  
   const {
     images,
     showCamera,
@@ -102,9 +107,13 @@ export default function AddSampleScreen() {
     installationId: deviceInfo?.installationId,
   });
 
-  useEffect(() => {
-    captureLocation();
-  }, [captureLocation]);
+
+  // Refresh location whenever screen regains focus (e.g., user comes back from settings)
+  useFocusEffect(
+    useCallback(() => {
+      captureLocation();
+    }, [captureLocation])
+  );
 
   const sampleIdPreview = useMemo(() => {
     if (!deviceInfo) return '';
@@ -117,6 +126,18 @@ export default function AddSampleScreen() {
   }, [deviceInfo, now]);
 
   const onSubmit = handleSubmit(async (values) => {
+
+    // Require valid location coordinates before saving
+    if (!coordinates) {
+      Alert.alert(
+        'Location Required',
+        'Please enable location services and grant permission to save the sample.',
+        [
+          { text: 'Retry', onPress: captureLocation }
+        ]
+      );
+      return;
+    }
 
     const validation = validateSample(values);
 
@@ -131,6 +152,7 @@ export default function AddSampleScreen() {
     const sample = await saveSample({
       ...values,
       images: images.map((image) => image.filePath ?? image.uri),
+      coordinates: coordinates,
     });
 
     if (!sample) return;
@@ -167,6 +189,9 @@ export default function AddSampleScreen() {
         />
 
         <View style={styles.sections}>
+
+          <SampleFields control={control} />
+          
           <SectionCard title="Images">
             <ActionButton
               label="Capture Images"
@@ -178,8 +203,6 @@ export default function AddSampleScreen() {
               onRemove={removeImage}
             />
           </SectionCard>
-
-          <SampleFields control={control} />
 
           {deviceInfo && (
             <SectionCard title="Automatic Information">
@@ -202,11 +225,22 @@ export default function AddSampleScreen() {
             </Text>
           )}
 
+          {gpsError && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{gpsError}</Text>
+              <ActionButton
+                label="Retry Location"
+                onPress={captureLocation}
+                style={styles.retryButton}
+              />
+            </View>
+          )}
+
           <View style={styles.actions}>
             <ActionButton
               label={saving ? 'Saving...' : 'Save Sample'}
               onPress={onSubmit}
-              disabled={saving}
+              disabled={saving || !coordinates}
             />
 
             <ActionButton
@@ -252,5 +286,22 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.body,
     color: COLORS.textSecondary,
     textAlign: 'center',
+  },
+
+  errorContainer: {
+    backgroundColor: '#FFEBEE',
+    padding: SPACING.md,
+    borderRadius: 8,
+    gap: SPACING.sm,
+  },
+
+  errorText: {
+    fontSize: FONT_SIZES.body,
+    color: COLORS.danger,
+    textAlign: 'center',
+  },
+
+  retryButton: {
+    marginTop: SPACING.xs,
   },
 });

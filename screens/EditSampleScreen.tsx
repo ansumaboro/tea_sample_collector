@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import {
   ActivityIndicator,
   Alert,
@@ -9,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useForm } from 'react-hook-form';
 
 import { ActionButton } from '@/components/ActionButton';
 import { AutoInfoPanel } from '@/components/AutoInfoPanel';
@@ -58,7 +58,7 @@ export default function EditSampleScreen() {
       treeNumber: '',
       leafNumber: '',
 
-      leafPosition: '3rd_leaf',
+      leafPosition: '1st_leaf',
 
       meterReading1: '',
       meterReading2: '',

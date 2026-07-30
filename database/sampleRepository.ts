@@ -396,5 +396,19 @@ export const sampleRepository = {
       DELETE FROM sqlite_sequence
       WHERE name='sample_images';
     `);
-  }
+  },
+
+  async deleteByIds(ids: string[]) {
+    if (ids.length === 0) {
+      return;
+    }
+
+    const db = await getDatabase();
+    const placeholders = ids.map(() => '?').join(', ');
+
+    await db.runAsync(
+      `DELETE FROM samples WHERE id IN (${placeholders})`,
+      ...ids,
+    );
+  },
 };

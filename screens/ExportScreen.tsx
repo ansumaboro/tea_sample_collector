@@ -1,18 +1,16 @@
-import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActionButton } from '@/components/ActionButton';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
-import { clearRecords, exportRecordsToFile, getExportCounts } from '@/services/exportService';
+import { getExportCounts } from '@/services/exportService';
 
 export default function ExportScreen() {
   const [recordCount, setRecordCount] = useState(0);
   const [exportableCount, setExportableCount] = useState(0);
-  const [exporting, setExporting] = useState(false);
-  const [clearing, setClearing] = useState(false);
 
   const loadCounts = useCallback(async () => {
     try {
@@ -25,9 +23,11 @@ export default function ExportScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    loadCounts();
-  }, [loadCounts]);
+  useFocusEffect(
+    useCallback(() => {
+      loadCounts();
+    }, [loadCounts])
+  );
 
   const handleExport = useCallback(async () => {
     if (recordCount === 0) {
@@ -35,65 +35,17 @@ export default function ExportScreen() {
       return;
     }
 
-    if (exportableCount === 0) {
-      Alert.alert('No exportable records', 'Only samples with images can be exported.');
+    router.push('/export-selection' as never);
+  }, [recordCount]);
+
+  const handleClear = useCallback(() => {
+    if (recordCount === 0) {
+      Alert.alert('No records', 'There are no samples to clear yet.');
       return;
     }
 
-    setExporting(true);
-    try {
-      const result = await exportRecordsToFile();
-      await loadCounts();
-      Alert.alert(
-        'Export complete',
-        `Exported ${result.recordCount} sample(s).\nLeft to export: ${result.skippedCount} sample(s) without images.\n\nFile: ${result.filePath}`,
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Export failed.';
-      if (!message.toLowerCase().includes('cancel')) {
-        Alert.alert('Export failed', message);
-      }
-    } finally {
-      setExporting(false);
-    }
-  }, [exportableCount, loadCounts, recordCount]);
-
-  const handleClear = useCallback(() => {
-    Alert.alert(
-      'Clear Records',
-      'This will permanently delete all samples and stored images. This action cannot be undone.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            setClearing(true);
-
-            try {
-              await clearRecords();
-
-              setRecordCount(0);
-              setExportableCount(0);
-
-              Alert.alert(
-                'Records Cleared',
-                'All sample records have been deleted.'
-              );
-            } catch (error) {
-              const message = error instanceof Error ? error.message : 'Failed to clear records.';
-              Alert.alert('Error', message);
-            } finally {
-              setClearing(false);
-            }
-          },
-        },
-      ]
-    );
-  }, []);
+    router.push('/clear-selection' as never);
+  }, [recordCount]);
 
   return (
     <SafeAreaProvider>
@@ -109,21 +61,19 @@ export default function ExportScreen() {
             <Text style={styles.statLabel}>Left to export</Text>
             <Text style={styles.statSubValue}>{recordCount - exportableCount}</Text>
             <Text style={styles.help}>
-              Only samples with images are exported. On Android, you will be asked to choose a
-              folder using the system file picker (Storage Access Framework). The CSV file will be
-              saved there.
+              Tap export to choose the samples you want. Only samples with images can be selected
+              for export. On Android, you will be asked to choose a folder using the system file
+              picker (Storage Access Framework).
             </Text>
           </View>
 
           <ActionButton
-            label={exporting ? 'Exporting...' : 'Export Records'}
+            label="Export Records"
             onPress={handleExport}
-            disabled={exporting}
           />
           <ActionButton
-            label={clearing ? 'Clearing...' : 'Clear Records'}
+            label="Clear Records"
             onPress={handleClear}
-            disabled={exporting || clearing}
             variant="danger"
           />
           <ActionButton label="Back" onPress={() => router.back()} variant="secondary" />
@@ -167,9 +117,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.text,
     marginBottom: SPACING.sm,
-  },
-  actions: {
-    gap: SPACING.md,
   },
   help: {
     fontSize: FONT_SIZES.body,

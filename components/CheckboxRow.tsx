@@ -6,20 +6,27 @@ interface CheckboxRowProps {
   label: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
+  disabled?: boolean;
 }
 
-export function CheckboxRow({ label, value, onValueChange }: CheckboxRowProps) {
+export function CheckboxRow({
+  label,
+  value,
+  onValueChange,
+  disabled = false,
+}: CheckboxRowProps) {
   return (
     <Pressable
       accessibilityRole="checkbox"
-      accessibilityState={{ checked: value }}
+      accessibilityState={{ checked: value, disabled }}
+      disabled={disabled}
       onPress={() => onValueChange(!value)}
-      style={styles.row}
+      style={[styles.row, disabled ? styles.rowDisabled : null]}
     >
-      <View style={[styles.box, value ? styles.boxChecked : null]}>
+      <View style={[styles.box, value ? styles.boxChecked : null, disabled ? styles.boxDisabled : null]}>
         {value ? <Text style={styles.checkmark}>✓</Text> : null}
       </View>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, disabled ? styles.labelDisabled : null]}>{label}</Text>
     </Pressable>
   );
 }
@@ -30,6 +37,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.md,
     gap: SPACING.sm,
+  },
+  rowDisabled: {
+    opacity: 0.6,
   },
   box: {
     width: 32,
@@ -45,6 +55,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
+  boxDisabled: {
+    borderColor: COLORS.disabled,
+    backgroundColor: COLORS.background,
+  },
   checkmark: {
     color: '#FFFFFF',
     fontSize: 20,
@@ -55,5 +69,8 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.body,
     color: COLORS.text,
     fontWeight: '600',
+  },
+  labelDisabled: {
+    color: COLORS.textSecondary,
   },
 });

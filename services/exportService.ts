@@ -3,30 +3,46 @@ import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
 
 import { sampleRepository } from '@/database/sampleRepository';
+import type { Sample } from '@/types/sample';
+import { deleteSampleImages } from '@/services/imageService';
 import { getCsvExportFilename, samplesToCsv } from '@/utils/csv';
 
 export interface ExportResult {
   filePath: string;
   recordCount: number;
-  skippedCount: number;
-  totalCount: number;
 }
 
-async function getExportableSamples() {
-  const samples = await sampleRepository.getAll();
-  return samples.filter((sample) => sample.images.length > 0);
+export interface ExportSelectionData {
+  samplesWithImages: Sample[];
+  samplesWithoutImages: Sample[];
+}
+
+async function getAllSamplesForExport() {
+  return sampleRepository.getAll();
+}
+
+function splitSamplesByImageAvailability(samples: Sample[]): ExportSelectionData {
+  return {
+    samplesWithImages: samples.filter((sample) => sample.images.length > 0),
+    samplesWithoutImages: samples.filter((sample) => sample.images.length === 0),
+  };
 }
 
 async function getExportData() {
-  const samples = await sampleRepository.getAll();
-  const exportableSamples = samples.filter((sample) => sample.images.length > 0);
+  const samples = await getAllSamplesForExport();
+  const { samplesWithImages, samplesWithoutImages } = splitSamplesByImageAvailability(samples);
 
   return {
     totalCount: samples.length,
-    exportableSamples,
-    exportableCount: exportableSamples.length,
-    skippedCount: samples.length - exportableSamples.length,
+    exportableSamples: samplesWithImages,
+    exportableCount: samplesWithImages.length,
+    skippedCount: samplesWithoutImages.length,
   };
+}
+
+export async function getExportSelectionData(): Promise<ExportSelectionData> {
+  const samples = await getAllSamplesForExport();
+  return splitSamplesByImageAvailability(samples);
 }
 
 export async function getExportCounts(): Promise<{
@@ -44,19 +60,18 @@ export async function getExportCounts(): Promise<{
 }
 
 /** Generate CSV content from stored samples that have images. */
-export async function buildExportCsv(): Promise<{ csv: string; count: number; skippedCount: number }> {
-  const { exportableSamples, skippedCount } = await getExportData();
+export async function buildExportCsv(
+  samples: Sample[],
+): Promise<{ csv: string; count: number }> {
+  const exportableSamples = samples.filter((sample) => sample.images.length > 0);
 
   return {
     csv: samplesToCsv(exportableSamples),
     count: exportableSamples.length,
-    skippedCount,
   };
 }
 
-export async function exportImages(directory: Directory) {
-  const samples = await getExportableSamples();
-
+export async function exportImages(directory: Directory, samples: Sample[]) {
   const date = new Date();
   const pad = (value: number) => String(value).padStart(2, '0');
   const stamp = `${date.getFullYear()}_${pad(date.getMonth() + 1)}_${pad(date.getDate())}`;
@@ -84,8 +99,15 @@ export async function exportImages(directory: Directory) {
 /**
  * Export CSV to user-selected directory (Android SAF) or share sheet fallback.
  */
-export async function exportRecordsToFile(): Promise<ExportResult> {
-  const { csv, count, skippedCount } = await buildExportCsv();
+export async function exportRecordsToFile(selectedSamples?: Sample[]): Promise<ExportResult> {
+  const samples = selectedSamples ?? (await getExportData()).exportableSamples;
+  const exportableSamples = samples.filter((sample) => sample.images.length > 0);
+
+  if (exportableSamples.length === 0) {
+    throw new Error('Select at least one sample with images to export.');
+  }
+
+  const { csv, count } = await buildExportCsv(exportableSamples);
   const filename = getCsvExportFilename();
 
   if (Platform.OS === 'android') {
@@ -93,13 +115,8 @@ export async function exportRecordsToFile(): Promise<ExportResult> {
     const file = directory.createFile(filename, 'text/csv');
     file.write(csv);
 
-    await exportImages(directory);
-    return {
-      filePath: file.uri,
-      recordCount: count,
-      skippedCount,
-      totalCount: count + skippedCount,
-    };
+    await exportImages(directory, exportableSamples);
+    return { filePath: file.uri, recordCount: count };
   }
 
   const cacheFile = new File(Paths.cache, filename);
@@ -113,15 +130,12 @@ export async function exportRecordsToFile(): Promise<ExportResult> {
     });
   }
 
-  return {
-    filePath: cacheFile.uri,
-    recordCount: count,
-    skippedCount,
-    totalCount: count + skippedCount,
-  };
+  return { filePath: cacheFile.uri, recordCount: count };
 }
 
 export async function clearRecords() {
+  const samples = await getAllSamplesForExport();
+  samples.forEach((sample) => deleteSampleImages(sample.images));
   await sampleRepository.clear();
 
   const imageDirectory = new Directory(
@@ -132,4 +146,17 @@ export async function clearRecords() {
   if (imageDirectory.exists) {
     imageDirectory.delete();
   }
+}
+
+export async function clearSelectedRecords(selectedSamples: Sample[]) {
+  if (selectedSamples.length === 0) {
+    throw new Error('Select at least one sample to clear.');
+  }
+
+  selectedSamples.forEach((sample) => deleteSampleImages(sample.images));
+  await sampleRepository.deleteByIds(selectedSamples.map((sample) => sample.id));
+
+  return {
+    clearedCount: selectedSamples.length,
+  };
 }

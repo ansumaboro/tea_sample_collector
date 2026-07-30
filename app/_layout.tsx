@@ -16,7 +16,6 @@ export default function RootLayout() {
   const error = useDeviceStore((state) => state.error);
 
   const {
-    coordinates,
     captureLocation,
   } = useLocationCapture();
 
@@ -41,7 +40,7 @@ export default function RootLayout() {
     bootstrap().catch((bootstrapError) => {
       console.error('App bootstrap failed:', bootstrapError);
     });
-  }, [initializeDevice]);
+  }, [initializeDevice, captureLocation]);
 
   if (!isReady) {
     return (

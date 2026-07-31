@@ -18,7 +18,7 @@ export function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.sm,
   },
   title: {
     fontSize: FONT_SIZES.title,

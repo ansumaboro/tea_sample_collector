@@ -1,12 +1,12 @@
-import { Dropdown } from 'react-native-element-dropdown';
 import { StyleSheet, Text, View } from 'react-native';
+import { Dropdown } from 'react-native-element-dropdown';
 
 import {
   COLORS,
   FONT_SIZES,
   INPUT_HEIGHT,
-  SPACING,
   RADIUS,
+  SPACING,
 } from '@/constants/theme';
 
 interface DropdownOption {
@@ -69,7 +69,10 @@ export function DropdownField({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center'
   },
 
   label: {
@@ -90,6 +93,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
 
     paddingHorizontal: SPACING.md,
+    // width: '50%',
+    flex: 1
   },
 
   dropdownError: {

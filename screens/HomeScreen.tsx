@@ -51,7 +51,7 @@ export default function HomeScreen() {
 
           <View style={styles.buttons}>
             <ActionButton label="Add Sample" onPress={() => router.push('/add-sample')} />
-            <ActionButton label="Update Sample" onPress={() => router.push('/update-sample')} />
+            <ActionButton label="View/Update Sample" onPress={() => router.push('/update-sample')} />
             <ActionButton label="Export Records" onPress={() => router.push('/export-records')} />
             <ActionButton label="Exit" onPress={handleExit} variant="danger" />
           </View>

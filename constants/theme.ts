@@ -69,8 +69,8 @@ export const LAYOUT = {
   checkboxGap: SPACING.sm,
 } as const;
 
-export const BUTTON_HEIGHT = 64;
-export const INPUT_HEIGHT = 52;
+export const BUTTON_HEIGHT = 44;
+export const INPUT_HEIGHT = 44;
 
 export const DB_NAME = 'tea_samples.db';
 export const INSTALLATION_ID_KEY = 'tea_installation_id';

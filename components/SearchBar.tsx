@@ -31,6 +31,6 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.input,
     color: COLORS.text,
     backgroundColor: COLORS.surface,
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
 });

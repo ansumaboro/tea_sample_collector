@@ -40,7 +40,7 @@ export default function RootLayout() {
     bootstrap().catch((bootstrapError) => {
       console.error('App bootstrap failed:', bootstrapError);
     });
-  }, [initializeDevice, captureLocation]);
+  }, [initializeDevice]);
 
   if (!isReady) {
     return (

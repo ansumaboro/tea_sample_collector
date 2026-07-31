@@ -1,7 +1,8 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
   FlatList,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -13,7 +14,7 @@ import {
 
 import { ActionButton } from '@/components/ActionButton';
 import { DropdownField } from '@/components/DropdownField';
-import { SampleListItem } from '@/components/SampleListItem';
+import { SampleSummaryCard } from '@/components/SampleSummaryCard';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SearchBar } from '@/components/SearchBar';
 
@@ -44,10 +45,12 @@ export default function UpdateSampleListScreen() {
   const loadSamples = useSampleStore((state) => state.loadSamples);
   const setSearchQuery = useSampleStore((state) => state.setSearchQuery);
   const setSearchField = useSampleStore((state) => state.setSearchField);
+  const [activePanel, setActivePanel] = useState<'with_images' | 'without_images'>('with_images');
 
-  useFocusEffect(() => {
-    loadSamples()
-  }
+  useFocusEffect(
+    useCallback(() => {
+      loadSamples(searchQuery, searchField);
+    }, [loadSamples, searchField, searchQuery]),
   );
 
   const handleSearch = useCallback(
@@ -69,13 +72,19 @@ export default function UpdateSampleListScreen() {
     [loadSamples, searchQuery, setSearchField],
   );
 
+  const filteredSamples = samples.filter((sample) =>
+    activePanel === 'with_images'
+      ? sample.images.length > 0
+      : sample.images.length === 0,
+  );
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.page}>
         <View style={styles.container}>
           <ScreenHeader
-            title="Update Sample"
-            subtitle="Search existing records"
+            title="View/Update Sample"
+            subtitle="Search and review existing records"
           />
 
           <DropdownField
@@ -90,12 +99,48 @@ export default function UpdateSampleListScreen() {
             onChangeText={handleSearch}
           />
 
+          <View style={styles.toggleRow}>
+            <Pressable
+              onPress={() => setActivePanel('with_images')}
+              style={[
+                styles.toggleButton,
+                activePanel === 'with_images' ? styles.toggleButtonActive : null,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.toggleLabel,
+                  activePanel === 'with_images' ? styles.toggleLabelActive : null,
+                ]}
+              >
+                Samples With Images
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setActivePanel('without_images')}
+              style={[
+                styles.toggleButton,
+                activePanel === 'without_images' ? styles.toggleButtonActive : null,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.toggleLabel,
+                  activePanel === 'without_images' ? styles.toggleLabelActive : null,
+                ]}
+              >
+                Samples Without Images
+              </Text>
+            </Pressable>
+          </View>
+
           <Text style={styles.resultTitle}>
-            Results
+            {activePanel === 'with_images' ? 'Samples With Images' : 'Samples Without Images'}
           </Text>
 
           <FlatList
-            data={samples}
+            data={filteredSamples}
             keyExtractor={(item) => item.id}
             style={styles.list}
             contentContainerStyle={styles.listContent}
@@ -106,12 +151,12 @@ export default function UpdateSampleListScreen() {
                 </Text>
               ) : (
                 <Text style={styles.empty}>
-                  No samples found.
+                  No samples found in this panel.
                 </Text>
               )
             }
             renderItem={({ item }) => (
-              <SampleListItem
+              <SampleSummaryCard
                 sample={item}
                 onPress={() =>
                   router.push({
@@ -145,7 +190,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    padding: SPACING.lg,
+    padding: SPACING.md,
   },
 
   resultTitle: {
@@ -153,6 +198,40 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.text,
     marginBottom: SPACING.sm,
+  },
+
+  toggleRow: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
+  },
+
+  toggleButton: {
+    flex: 1,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    backgroundColor: COLORS.surface,
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  toggleButtonActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+
+  toggleLabel: {
+    fontSize: FONT_SIZES.body,
+    fontWeight: '700',
+    color: COLORS.text,
+    textAlign: 'center',
+  },
+
+  toggleLabelActive: {
+    color: '#FFFFFF',
   },
 
   list: {

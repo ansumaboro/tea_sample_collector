@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import { Camera, useCameraDevice, useCameraPermission, usePhotoOutput } from 'react-native-vision-camera';
 
 import { ActionButton } from '@/components/ActionButton';
@@ -12,23 +12,33 @@ interface CameraModalProps {
   onCapture: (uri: string) => void;
 }
 
+type CaptureState = 'idle' | 'capturing' | 'processing';
+
+
 export function CameraModal({ visible, onClose, onCapture }: CameraModalProps) {
   const { hasPermission, requestPermission } = useCameraPermission();
-  const [capturing, setCapturing] = useState(false);
+  const [captureState, setCaptureState] = useState<CaptureState>('idle');
   const device = useCameraDevice('back');
   const photoOutput = usePhotoOutput();
 
   const handleCapture = async () => {
-    if (!device || capturing) return;
+    if (!device || captureState !== 'idle') return;
 
-    setCapturing(true);
     let photo;
     let image;
+
     try {
+      setCaptureState('capturing')
       photo = await photoOutput.capturePhoto(
-        { flashMode: 'off', enableShutterSound: false },
+        {
+          flashMode: 'off',
+          enableShutterSound: false
+        },
         {}
       );
+
+      setCaptureState('processing');
+
       image = await photo.toImageAsync();
       const tempPngPath = await image.saveToTemporaryFileAsync('png');
       // Make 100% sure the file exists before disposing
@@ -61,7 +71,7 @@ export function CameraModal({ visible, onClose, onCapture }: CameraModalProps) {
       // Null out references only after dispose completes
       photo = null;
       image = null;
-      setCapturing(false);
+      setCaptureState('idle');
     }
   };
 
@@ -69,12 +79,33 @@ export function CameraModal({ visible, onClose, onCapture }: CameraModalProps) {
     <Modal animationType="slide" visible={visible} onRequestClose={onClose}>
       <SafeAreaView style={styles.container}>
         {hasPermission && device ? (
-          <Camera
-            style={styles.camera}
-            device={device}
-            isActive={visible}
-            outputs={[photoOutput]}
-          />
+          <>
+            <Camera
+              style={styles.camera}
+              device={device}
+              isActive={visible && captureState !== 'processing'}
+              outputs={[photoOutput]}
+            />
+
+            {captureState === 'processing' && (
+              <View style={styles.processingOverlay}>
+                <ActivityIndicator
+                  size="large"
+                  color="#FFFFFF"
+                />
+
+                <Text style={styles.processingTitle}>
+                  Processing image...
+                </Text>
+
+                <Text style={styles.processingSubtitle}>
+                  Photo captured successfully.
+                  {'\n'}
+                  You can move the camera now.
+                </Text>
+              </View>
+            )}
+          </>
         ) : (
           <View style={styles.permissionBox}>
             <Text style={styles.permissionText}>Camera permission is required.</Text>
@@ -82,8 +113,23 @@ export function CameraModal({ visible, onClose, onCapture }: CameraModalProps) {
         )}
 
         <View style={styles.controls}>
-          <ActionButton label="Capture Photo" onPress={handleCapture} disabled={capturing} />
-          <ActionButton label="Close Camera" onPress={onClose} variant="secondary" />
+          <ActionButton
+            label={
+              captureState === 'capturing'
+                ? 'Capturing...'
+                : captureState === 'processing'
+                  ? "Processing Image..."
+                  : 'Capture Photo'
+            }
+            onPress={handleCapture}
+            disabled={captureState !== 'idle'}
+          />
+          <ActionButton
+            label="Close Camera"
+            onPress={onClose}
+            variant="secondary"
+            disabled={captureState !== 'idle'}
+          />
         </View>
       </SafeAreaView>
     </Modal>
@@ -114,5 +160,26 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     gap: SPACING.sm,
     backgroundColor: COLORS.background,
+  },
+  processingOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  processingTitle: {
+    marginTop: SPACING.md,
+    color: '#FFFFFF',
+    fontSize: FONT_SIZES.sectionTitle,
+    fontWeight: '700',
+  },
+
+  processingSubtitle: {
+    marginTop: SPACING.sm,
+    color: '#FFFFFF',
+    fontSize: FONT_SIZES.body,
+    textAlign: 'center',
+    lineHeight: 22,
   },
 });

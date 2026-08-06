@@ -33,6 +33,7 @@ import type {
   SampleFormInput,
 } from '@/types/sample';
 import { validateSample } from '@/utils/sampleValidation';
+import ImageViewing from 'react-native-image-viewing'
 
 function formatDateTime(value: string) {
   const date = new Date(value);
@@ -60,13 +61,18 @@ function DetailRow({
 
 function ViewSampleDetails({
   sample,
+  onImagePress,
 }: {
   sample: Sample;
+  onImagePress: (index: number) => void;
 }) {
   return (
     <View style={styles.sections}>
       <SectionCard title="Leaf Images">
-        <ImageThumbnailList images={sample.images} />
+        <ImageThumbnailList 
+          images={sample.images}
+          onImagePress={onImagePress}
+        />
       </SectionCard>
 
       <SectionCard title="Sample Information">
@@ -138,6 +144,13 @@ export default function EditSampleScreen() {
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [removedPaths, setRemovedPaths] = useState<string[]>([]);
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  const handleImagePress = useCallback((index: number) => {
+    setSelectedImageIndex(index);
+    setImageViewerVisible(true);
+  }, []);
 
   const {
     control,
@@ -382,6 +395,7 @@ export default function EditSampleScreen() {
               <ImageThumbnailList
                 images={images.map((image) => image.uri)}
                 onRemove={handleRemoveImage}
+                onImagePress={handleImagePress}
               />
             </SectionCard>
 
@@ -416,7 +430,10 @@ export default function EditSampleScreen() {
             </View>
           </View>
         ) : (
-          <ViewSampleDetails sample={sample} />
+          <ViewSampleDetails
+            sample={sample}
+            onImagePress={handleImagePress}  
+          />
         )}
 
         {!editMode ? (
@@ -432,6 +449,17 @@ export default function EditSampleScreen() {
         visible={showCamera}
         onClose={() => setShowCamera(false)}
         onCapture={handleCapture}
+      />
+
+      <ImageViewing 
+        images={
+          editMode
+            ? images.map((image) => ({ uri: image.uri}))
+            : sample.images.map((uri) => ({ uri }))
+        }
+        imageIndex={selectedImageIndex}
+        visible={imageViewerVisible}
+        onRequestClose={() => setImageViewerVisible(false)}
       />
     </SafeAreaView>
   );

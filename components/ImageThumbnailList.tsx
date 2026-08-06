@@ -5,9 +5,10 @@ import { COLORS, FONT_SIZES, SPACING } from '@/constants/theme';
 interface ImageThumbnailListProps {
   images: string[];
   onRemove?: (index: number) => void;
+  onImagePress?: (index: number) => void;
 }
 
-export function ImageThumbnailList({ images, onRemove }: ImageThumbnailListProps) {
+export function ImageThumbnailList({ images, onRemove, onImagePress }: ImageThumbnailListProps) {
   if (images.length === 0) {
     return (
       <View style={styles.empty}>
@@ -24,7 +25,19 @@ export function ImageThumbnailList({ images, onRemove }: ImageThumbnailListProps
       contentContainerStyle={styles.list}
       renderItem={({ item, index }) => (
         <View style={styles.thumbnailWrap}>
-          <Image source={{ uri: item }} style={styles.thumbnail} />
+          <Pressable
+            onPress={() => onImagePress?.(index)}
+            style={({pressed}) => ({
+              opacity: pressed ? 0.8 : 1,
+            })}
+            android_ripple={{color: '#ddd'}}
+          >
+            <Image
+              source={{ uri: item }}
+              style={styles.thumbnail} 
+            />
+          </Pressable>
+
           {onRemove ? (
             <Pressable
               accessibilityLabel={`Remove image ${index + 1}`}

@@ -35,10 +35,15 @@ import {
 
 import { validateSample } from '@/utils/sampleValidation';
 
+import ImageViewing from 'react-native-image-viewing'
+
 export default function AddSampleScreen() {
   const deviceInfo = useDeviceStore((state) => state.deviceInfo);
 
   const { saveSample, saving, error } = useSaveSample();
+
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
   const {
     coordinates,
@@ -196,6 +201,10 @@ export default function AddSampleScreen() {
             <ImageThumbnailList
               images={images.map((image) => image.uri)}
               onRemove={removeImage}
+              onImagePress={(index)=>{
+                setSelectedImageIndex(index);
+                setImageViewerVisible(true)
+              }}
             />
           </SectionCard>
 
@@ -246,6 +255,15 @@ export default function AddSampleScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <ImageViewing 
+        images={images.map((image) => ({
+          uri: image.uri,
+        }))}
+        imageIndex={selectedImageIndex}
+        visible={imageViewerVisible}
+        onRequestClose={() => setImageViewerVisible(false)}
+      />
 
       <CameraModal
         visible={showCamera}

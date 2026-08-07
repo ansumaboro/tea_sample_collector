@@ -41,6 +41,7 @@ function rowToSample(row: SampleRow, images: string[]): Sample {
     sectionName: row.section_name,
 
     // Plant Health
+    healthy: row.healthy === 1,
     wilting: row.wilting === 1,
     chlorosis: row.chlorosis === 1,
     scorching: row.scorching === 1,
@@ -114,6 +115,7 @@ export const sampleRepository = {
       garden_name,
       section_name,
 
+      healthy,
       wilting,
       chlorosis,
       scorching,
@@ -141,7 +143,7 @@ export const sampleRepository = {
       ?, ?,
       ?, ?, ?,
       ?, ?,
-      ?, ?, ?, ?, ?,
+      ?, ?, ?, ?, ?, ?,
       ?, ?,
       ?, ?, ?, ?, ?, ?,
       ?,
@@ -169,6 +171,7 @@ export const sampleRepository = {
       params.gardenName.trim(),
       params.sectionName.trim(),
 
+      params.healthy ? 1 : 0,
       params.wilting ? 1 : 0,
       params.chlorosis ? 1 : 0,
       params.scorching ? 1 : 0,
@@ -306,6 +309,7 @@ export const sampleRepository = {
       garden_name = ?,
       section_name = ?,
 
+      healthy = ?,
       wilting = ?,
       chlorosis = ?,
       scorching = ?,
@@ -335,6 +339,7 @@ export const sampleRepository = {
       merged.gardenName.trim(),
       merged.sectionName.trim(),
 
+      merged.healthy ? 1 : 0,
       merged.wilting ? 1 : 0,
       merged.chlorosis ? 1 : 0,
       merged.scorching ? 1 : 0,

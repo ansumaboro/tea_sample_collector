@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS samples (
   section_name TEXT NOT NULL,
 
   -- Plant Health
+  healthy INTEGER NOT NULL DEFAULT 0,
   wilting INTEGER NOT NULL DEFAULT 0,
   chlorosis INTEGER NOT NULL DEFAULT 0,
   scorching INTEGER NOT NULL DEFAULT 0,

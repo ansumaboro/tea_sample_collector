@@ -79,6 +79,7 @@ export default function AddSampleScreen() {
       gardenName: '',
       sectionName: '',
 
+      healthy: false,
       wilting: false,
       chlorosis: false,
       scorching: false,

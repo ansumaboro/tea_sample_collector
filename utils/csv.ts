@@ -20,6 +20,7 @@ const CSV_COLUMNS = [
   'garden_name',
   'section_name',
 
+  'healthy',
   'wilting',
   'chlorosis',
   'scorching',
@@ -83,6 +84,7 @@ function sampleToRow(sample: Sample): string[] {
     sample.gardenName,
     sample.sectionName,
 
+    sample.healthy,
     sample.wilting,
     sample.chlorosis,
     sample.scorching,

@@ -69,7 +69,7 @@ function ViewSampleDetails({
   return (
     <View style={styles.sections}>
       <SectionCard title="Leaf Images">
-        <ImageThumbnailList 
+        <ImageThumbnailList
           images={sample.images}
           onImagePress={onImagePress}
         />
@@ -102,6 +102,7 @@ function ViewSampleDetails({
       </SectionCard>
 
       <SectionCard title="Plant Health">
+        <DetailRow label="healthy" value={formatBoolean(sample.healthy)} />
         <DetailRow label="Wilting" value={formatBoolean(sample.wilting)} />
         <DetailRow label="Chlorosis" value={formatBoolean(sample.chlorosis)} />
         <DetailRow label="Scorching" value={formatBoolean(sample.scorching)} />
@@ -172,6 +173,7 @@ export default function EditSampleScreen() {
       flushAutoDetected: false,
       gardenName: '',
       sectionName: '',
+      healthy: false,
       wilting: false,
       chlorosis: false,
       scorching: false,
@@ -232,6 +234,7 @@ export default function EditSampleScreen() {
         flushAutoDetected: loaded.flushAutoDetected,
         gardenName: loaded.gardenName,
         sectionName: loaded.sectionName,
+        healthy: loaded.healthy,
         wilting: loaded.wilting,
         chlorosis: loaded.chlorosis,
         scorching: loaded.scorching,
@@ -289,6 +292,7 @@ export default function EditSampleScreen() {
       flushAutoDetected: sample.flushAutoDetected,
       gardenName: sample.gardenName,
       sectionName: sample.sectionName,
+      healthy: sample.healthy,
       wilting: sample.wilting,
       chlorosis: sample.chlorosis,
       scorching: sample.scorching,
@@ -432,7 +436,7 @@ export default function EditSampleScreen() {
         ) : (
           <ViewSampleDetails
             sample={sample}
-            onImagePress={handleImagePress}  
+            onImagePress={handleImagePress}
           />
         )}
 
@@ -451,10 +455,10 @@ export default function EditSampleScreen() {
         onCapture={handleCapture}
       />
 
-      <ImageViewing 
+      <ImageViewing
         images={
           editMode
-            ? images.map((image) => ({ uri: image.uri}))
+            ? images.map((image) => ({ uri: image.uri }))
             : sample.images.map((uri) => ({ uri }))
         }
         imageIndex={selectedImageIndex}

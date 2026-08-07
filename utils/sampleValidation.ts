@@ -58,6 +58,20 @@ export function validateSample(
         message: `${reading.name} must be a valid number.`,
       };
     }
+
+    if (sample.healthy && (
+      sample.wilting ||
+      sample.chlorosis ||
+      sample.scorching ||
+      sample.pestDamage ||
+      sample.disease
+    )) {
+      return {
+        valid: false,
+        message:
+          'A sample cannot be marked as "Healthy" and have plant health issues at the same time. Please uncheck either "Healthy" or the selected health issue(s).',
+      };
+    }
   }
 
   return {

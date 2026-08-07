@@ -16,6 +16,12 @@ export function PlantHealthSection({
     <SectionCard title="Plant Health">
       <ControlledCheckbox
         control={control}
+        name="healthy"
+        label="Healthy"
+      />
+      
+      <ControlledCheckbox
+        control={control}
         name="wilting"
         label="Wilting"
       />

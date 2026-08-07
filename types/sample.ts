@@ -70,7 +70,7 @@ export interface Sample {
 
   // Plant Health
   // overallHealth: PlantHealth;
-
+  healthy: boolean;
   wilting: boolean;
   chlorosis: boolean;
   scorching: boolean;
@@ -121,7 +121,7 @@ export interface SampleFormInput {
   sectionName: string;
 
   // overallHealth: PlantHealth;
-
+  healthy: boolean;
   wilting: boolean;
   chlorosis: boolean;
   scorching: boolean;
@@ -153,6 +153,7 @@ export type SampleUpdateInput = Partial<
     | 'gardenName'
     | 'sectionName'
     // | 'overallHealth'
+    | 'healthy'
     | 'wilting'
     | 'chlorosis'
     | 'scorching'
@@ -208,7 +209,7 @@ export interface SampleRow {
   section_name: string;
 
   // overall_health: PlantHealth;
-
+  healthy: number;
   wilting: number;
   chlorosis: number;
   scorching: number;
